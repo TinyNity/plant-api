@@ -7,7 +7,9 @@ import jakarta.ws.rs.core.Response;
 import org.ili.dto.AddMemberRequest;
 import org.ili.dto.CreateHomeRequest;
 import org.ili.dto.HomeResponse;
+import org.ili.dto.RoomResponse;
 import org.ili.service.HomeService;
+import org.ili.service.PlantService;
 
 import java.util.List;
 
@@ -18,6 +20,9 @@ public class HomeController {
 
     @Inject
     HomeService homeService;
+
+    @Inject
+    PlantService plantService;
 
     @GET
     public List<HomeResponse> getMyHomes() {
@@ -42,5 +47,11 @@ public class HomeController {
     public Response removeMember(@PathParam("id") Long homeId, @PathParam("userId") Long userId) {
         homeService.removeMember(homeId, userId);
         return Response.noContent().build();
+    }
+
+    @GET
+    @Path("/{id}/rooms")
+    public List<RoomResponse> getRooms(@PathParam("id") Long homeId) {
+        return plantService.getRoomsByHomeId(homeId);
     }
 }
