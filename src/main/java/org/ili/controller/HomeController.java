@@ -4,10 +4,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.ili.dto.AddMemberRequest;
-import org.ili.dto.CreateHomeRequest;
-import org.ili.dto.HomeResponse;
-import org.ili.dto.RoomResponse;
+import org.ili.dto.*;
 import org.ili.service.HomeService;
 import org.ili.service.PlantService;
 
@@ -53,5 +50,12 @@ public class HomeController {
     @Path("/{id}/rooms")
     public List<RoomResponse> getRooms(@PathParam("id") Long homeId) {
         return plantService.getRoomsByHomeId(homeId);
+    }
+
+    @POST
+    @Path("/{id}/rooms")
+    public Response createRoom(@PathParam("id") Long homeId, CreateRoomRequest request) {
+        RoomResponse room = plantService.createRoom(homeId, request);
+        return Response.status(Response.Status.CREATED).entity(room).build();
     }
 }

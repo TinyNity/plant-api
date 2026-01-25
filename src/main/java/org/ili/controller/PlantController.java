@@ -9,6 +9,8 @@ import org.ili.dto.CreatePlantRequest;
 import org.ili.dto.PlantResponse;
 import org.ili.service.PlantService;
 
+import java.util.List;
+
 @Path("/plants")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -16,6 +18,11 @@ public class PlantController {
 
     @Inject
     PlantService plantService;
+
+    @GET
+    public List<PlantResponse> getAllPlants() {
+        return plantService.getAllPlants();
+    }
 
     @POST
     public Response createPlant(CreatePlantRequest request) {

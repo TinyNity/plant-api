@@ -4,18 +4,9 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
-import org.ili.dto.CreateLogRequest;
-import org.ili.dto.CreatePlantRequest;
-import org.ili.dto.PlantResponse;
-import org.ili.dto.RoomResponse;
-import org.ili.entity.CareLog;
-import org.ili.entity.Plant;
-import org.ili.entity.Room;
-import org.ili.entity.User;
-import org.ili.repository.CareLogRepository;
-import org.ili.repository.PlantRepository;
-import org.ili.repository.RoomRepository;
-import org.ili.repository.UserRepository;
+import org.ili.dto.*;
+import org.ili.entity.*;
+import org.ili.repository.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,6 +20,9 @@ public class PlantService {
 
     @Inject
     RoomRepository roomRepository;
+
+    @Inject
+    HomeRepository homeRepository;
 
     @Inject
     CareLogRepository careLogRepository;
@@ -53,6 +47,25 @@ public class PlantService {
     }
 
     @Transactional
+    public RoomResponse createRoom(Long homeId, CreateRoomRequest request) {
+        Home home = homeRepository.findByIdOptional(homeId)
+                .orElseThrow(() -> new NotFoundException("Home not found"));
+
+        Room room = Room.builder()
+                .name(request.getName())
+                .home(home)
+                .build();
+
+        roomRepository.persist(room);
+
+        return RoomResponse.builder()
+                .id(room.id)
+                .name(room.name)
+                .homeId(home.id)
+                .build();
+    }
+
+    @Transactional
     public PlantResponse createPlant(CreatePlantRequest request) {
         Room room = roomRepository.findByIdOptional(request.getRoomId())
                 .orElseThrow(() -> new NotFoundException("Room not found"));
@@ -74,6 +87,12 @@ public class PlantService {
         Plant plant = plantRepository.findByIdOptional(id)
                 .orElseThrow(() -> new NotFoundException("Plant not found"));
         return mapToPlantResponse(plant);
+    }
+
+    public List<PlantResponse> getAllPlants() {
+        return plantRepository.listAll().stream()
+                .map(this::mapToPlantResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional
