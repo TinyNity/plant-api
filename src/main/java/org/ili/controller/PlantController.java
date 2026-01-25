@@ -7,6 +7,7 @@ import jakarta.ws.rs.core.Response;
 import org.ili.dto.CreateLogRequest;
 import org.ili.dto.CreatePlantRequest;
 import org.ili.dto.PlantResponse;
+import org.ili.dto.UpdatePlantRequest;
 import org.ili.service.PlantService;
 
 import java.util.List;
@@ -28,6 +29,13 @@ public class PlantController {
     public Response createPlant(CreatePlantRequest request) {
         PlantResponse plant = plantService.createPlant(request);
         return Response.status(Response.Status.CREATED).entity(plant).build();
+    }
+
+    @PUT
+    @Path("/{id}")
+    public Response updatePlant(@PathParam("id") Long id, UpdatePlantRequest request) {
+        PlantResponse plant = plantService.updatePlant(id, request);
+        return Response.ok(plant).build();
     }
 
     @GET

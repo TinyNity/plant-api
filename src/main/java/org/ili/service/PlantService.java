@@ -97,6 +97,33 @@ public class PlantService {
         return mapToPlantResponse(plant);
     }
 
+    @Transactional
+    public PlantResponse updatePlant(Long id, UpdatePlantRequest request) {
+        Plant plant = plantRepository.findByIdOptional(id)
+                .orElseThrow(() -> new NotFoundException("Plant not found"));
+
+        if (request.getName() != null) {
+            plant.name = request.getName();
+        }
+        if (request.getSpecies() != null) {
+            plant.species = request.getSpecies();
+        }
+        if (request.getWateringFrequency() != null) {
+            plant.wateringFrequency = request.getWateringFrequency();
+        }
+        if (request.getLastWateredDate() != null) {
+            plant.lastWateredDate = request.getLastWateredDate();
+        }
+        if (request.getRoomId() != null) {
+            Room room = roomRepository.findByIdOptional(request.getRoomId())
+                    .orElseThrow(() -> new NotFoundException("Room not found"));
+            plant.room = room;
+        }
+
+        plantRepository.persist(plant);
+        return mapToPlantResponse(plant);
+    }
+
     public PlantResponse getPlantById(Long id) {
         Plant plant = plantRepository.findByIdOptional(id)
                 .orElseThrow(() -> new NotFoundException("Plant not found"));
