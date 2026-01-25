@@ -84,6 +84,17 @@ public class HomeService {
     }
 
     @Transactional
+    public void deleteHome(Long homeId) {
+        Home home = homeRepository.findByIdOptional(homeId)
+                .orElseThrow(() -> new NotFoundException("Home not found"));
+        
+        // TODO: Vérifier si l'utilisateur courant est OWNER avant de supprimer
+        // Pour l'instant on suppose que c'est autorisé
+        
+        homeRepository.delete(home);
+    }
+
+    @Transactional
     public void addMember(Long homeId, AddMemberRequest request) {
         Home home = homeRepository.findByIdOptional(homeId)
                 .orElseThrow(() -> new NotFoundException("Home not found"));

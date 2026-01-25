@@ -32,6 +32,13 @@ public class HomeController {
         return Response.status(Response.Status.CREATED).entity(home).build();
     }
 
+    @DELETE
+    @Path("/{id}")
+    public Response deleteHome(@PathParam("id") Long homeId) {
+        homeService.deleteHome(homeId);
+        return Response.noContent().build();
+    }
+
     @POST
     @Path("/{id}/members")
     public Response addMember(@PathParam("id") Long homeId, AddMemberRequest request) {
@@ -57,5 +64,14 @@ public class HomeController {
     public Response createRoom(@PathParam("id") Long homeId, CreateRoomRequest request) {
         RoomResponse room = plantService.createRoom(homeId, request);
         return Response.status(Response.Status.CREATED).entity(room).build();
+    }
+
+    @DELETE
+    @Path("/{id}/rooms/{roomId}")
+    public Response deleteRoom(@PathParam("id") Long homeId, @PathParam("roomId") Long roomId) {
+        // Note: homeId n'est pas strictement nécessaire pour supprimer la room par ID,
+        // mais on pourrait vérifier que la room appartient bien à cette home pour la sécurité.
+        plantService.deleteRoom(roomId);
+        return Response.noContent().build();
     }
 }
