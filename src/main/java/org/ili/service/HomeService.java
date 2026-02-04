@@ -6,13 +6,17 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 import org.ili.dto.AddMemberRequest;
 import org.ili.dto.CreateHomeRequest;
+import org.ili.dto.CreateRoomRequest;
 import org.ili.dto.HomeResponse;
+import org.ili.dto.RoomResponse;
 import org.ili.entity.Home;
 import org.ili.entity.HomeMember;
 import org.ili.entity.HomeMemberId;
+import org.ili.entity.Room;
 import org.ili.entity.User;
 import org.ili.repository.HomeMemberRepository;
 import org.ili.repository.HomeRepository;
+import org.ili.repository.RoomRepository;
 import org.ili.repository.UserRepository;
 
 import java.util.List;
@@ -24,6 +28,10 @@ public class HomeService {
     @Inject
     HomeRepository homeRepository;
 
+
+    @Inject
+    RoomRepository roomRepository;
+    
     @Inject
     HomeMemberRepository homeMemberRepository;
 
@@ -125,4 +133,49 @@ public class HomeService {
         
         homeMemberRepository.delete(membership);
     }
+
+
+    public List<RoomResponse> getRoomsByHomeId(Long homeId) {
+        return roomRepository.findByHomeId(homeId).stream()
+                .map(room -> RoomResponse.builder()
+                        .id(room.id)
+                        .name(room.name)
+                        .homeId(room.home.id)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public RoomResponse createRoom(Long homeId, CreateRoomRequest request) {
+        Home home = homeRepository.findByIdOptional(homeId)
+                .orElseThrow(() -> new NotFoundException("Home not found"));
+
+        Room room = Room.builder()
+                .name(request.getName())
+                .home(home)
+                .build();
+
+        roomRepository.persist(room);
+
+        return RoomResponse.builder()
+                .id(room.id)
+                .name(room.name)
+                .homeId(home.id)
+                .build();
+    }
+
+    @Transactional
+    public void deleteRoom(Long roomId) {
+        Room room = roomRepository.findByIdOptional(roomId)
+                .orElseThrow(() -> new NotFoundException("Room not found"));
+        
+        // La suppression en cascade des plantes dépend de la config JPA.
+        // Si CascadeType.ALL n'est pas mis sur la relation OneToMany dans Room (ce qui n'est pas le cas ici car la relation est dans Plant),
+        // il faut supprimer les plantes manuellement ou compter sur la FK constraint ON DELETE CASCADE de la DB.
+        // Ici, on va laisser Hibernate gérer si possible, sinon il faudra supprimer les plantes avant.
+        // Pour l'instant, on tente la suppression directe.
+        
+        roomRepository.delete(room);
+    }
+
 }

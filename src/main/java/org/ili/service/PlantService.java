@@ -36,49 +36,6 @@ public class PlantService {
                 .orElseThrow(() -> new NotFoundException("User not found"));
     }
 
-    public List<RoomResponse> getRoomsByHomeId(Long homeId) {
-        return roomRepository.findByHomeId(homeId).stream()
-                .map(room -> RoomResponse.builder()
-                        .id(room.id)
-                        .name(room.name)
-                        .homeId(room.home.id)
-                        .build())
-                .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public RoomResponse createRoom(Long homeId, CreateRoomRequest request) {
-        Home home = homeRepository.findByIdOptional(homeId)
-                .orElseThrow(() -> new NotFoundException("Home not found"));
-
-        Room room = Room.builder()
-                .name(request.getName())
-                .home(home)
-                .build();
-
-        roomRepository.persist(room);
-
-        return RoomResponse.builder()
-                .id(room.id)
-                .name(room.name)
-                .homeId(home.id)
-                .build();
-    }
-
-    @Transactional
-    public void deleteRoom(Long roomId) {
-        Room room = roomRepository.findByIdOptional(roomId)
-                .orElseThrow(() -> new NotFoundException("Room not found"));
-        
-        // La suppression en cascade des plantes dépend de la config JPA.
-        // Si CascadeType.ALL n'est pas mis sur la relation OneToMany dans Room (ce qui n'est pas le cas ici car la relation est dans Plant),
-        // il faut supprimer les plantes manuellement ou compter sur la FK constraint ON DELETE CASCADE de la DB.
-        // Ici, on va laisser Hibernate gérer si possible, sinon il faudra supprimer les plantes avant.
-        // Pour l'instant, on tente la suppression directe.
-        
-        roomRepository.delete(room);
-    }
-
     @Transactional
     public PlantResponse createPlant(CreatePlantRequest request) {
         Room room = roomRepository.findByIdOptional(request.getRoomId())
