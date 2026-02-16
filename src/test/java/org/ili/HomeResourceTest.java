@@ -17,19 +17,24 @@ import static org.hamcrest.Matchers.hasItem;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class HomeResourceTest {
 
+    private static java.util.UUID createdHomeId;
+
     @Test
     @Order(1)
     public void testCreateHome() {
         CreateHomeRequest request = new CreateHomeRequest("My Test Home");
 
-        given()
+        String id = given()
                 .contentType(ContentType.JSON)
                 .body(request)
                 .when().post("/homes")
                 .then()
                 .statusCode(201)
                 .body("name", is("My Test Home"))
-                .body("memberUsernames", hasItem("Alice")); // Alice is user ID 1
+                .body("memberUsernames", hasItem("Alice"))
+                .extract().path("id");
+
+        createdHomeId = java.util.UUID.fromString(id);
     }
 
     @Test
@@ -39,13 +44,12 @@ public class HomeResourceTest {
                 .when().get("/homes")
                 .then()
                 .statusCode(200)
-                .body("size()", is(2)); // 1 from import.sql + 1 from testCreateHome
+                .body("size()", is(2));
     }
 
     @Test
     @Order(3)
     public void testAddMember() {
-        // Add Bob (user ID 2) to the home created in testCreateHome (ID 2, since ID 1 is in import.sql)
         AddMemberRequest request = new AddMemberRequest("bob@example.com");
 
         given()

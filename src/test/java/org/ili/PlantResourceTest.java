@@ -22,12 +22,11 @@ public class PlantResourceTest {
     @Test
     @Order(1)
     public void testGetRooms() {
-        // Home ID 1 from import.sql
         given()
-                .when().get("/homes/1/rooms")
+                .when().get("/homes/33333333-3333-3333-3333-333333333333/rooms")
                 .then()
                 .statusCode(200)
-                .body("size()", is(1))
+                .body("size()", is(3))
                 .body("[0].name", is("Salon"));
     }
 
@@ -39,7 +38,7 @@ public class PlantResourceTest {
                 "Monstera Deliciosa",
                 10,
                 LocalDate.now().minusDays(5),
-                1L // Room ID 1 from import.sql
+                java.util.UUID.fromString("44444444-4444-4444-4444-444444444441")
         );
 
         given()
@@ -49,15 +48,14 @@ public class PlantResourceTest {
                 .then()
                 .statusCode(201)
                 .body("name", is("Monstera"))
-                .body("roomId", is(1));
+                .body("roomId", is("44444444-4444-4444-4444-444444444441"));
     }
 
     @Test
     @Order(3)
     public void testGetPlant() {
-        // Plant ID 1 from import.sql
         given()
-                .when().get("/plants/1")
+                .when().get("/plants/55555555-5555-5555-5555-555555555501")
                 .then()
                 .statusCode(200)
                 .body("name", is("Ficus"));
@@ -66,19 +64,17 @@ public class PlantResourceTest {
     @Test
     @Order(4)
     public void testAddLog() {
-        // Add log to Plant ID 1
         CreateLogRequest request = new CreateLogRequest(CareLog.CareType.WATERING, "Arrosage abondant");
 
         given()
                 .contentType(ContentType.JSON)
                 .body(request)
-                .when().post("/plants/1/logs")
+                .when().post("/plants/55555555-5555-5555-5555-555555555501/logs")
                 .then()
                 .statusCode(201);
-        
-        // Verify lastWateredDate is updated
+
         given()
-                .when().get("/plants/1")
+                .when().get("/plants/55555555-5555-5555-5555-555555555501")
                 .then()
                 .statusCode(200)
                 .body("lastWateredDate", is(LocalDate.now().toString()));

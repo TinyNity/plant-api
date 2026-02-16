@@ -11,11 +11,11 @@ public class PlantListTest {
 
     @Test
     public void testGetAllPlants() {
-        // Should return at least the plant from import.sql
+        // Should return at least 11 plants from import.sql
         given()
                 .when().get("/plants")
                 .then()
                 .statusCode(200)
-                .body("size()", is(1));
+                .body("size()", is(11));
     }
 }
