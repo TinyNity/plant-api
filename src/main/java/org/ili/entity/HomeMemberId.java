@@ -6,12 +6,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 @Embeddable
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class HomeMemberId implements Serializable {
-    private Long homeId;
-    private Long userId;
+
+    private UUID homeId;
+    private UUID userId;
 }

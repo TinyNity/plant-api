@@ -20,6 +20,7 @@ import org.ili.repository.RoomRepository;
 import org.ili.repository.UserRepository;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -28,10 +29,9 @@ public class HomeService {
     @Inject
     HomeRepository homeRepository;
 
-
     @Inject
     RoomRepository roomRepository;
-    
+
     @Inject
     HomeMemberRepository homeMemberRepository;
 
@@ -40,14 +40,14 @@ public class HomeService {
 
     // Simulation Auth: renvoie l'utilisateur ID 1
     private User getCurrentUser() {
-        return userRepository.findByIdOptional(1L)
+        return userRepository.findAll().firstResultOptional()
                 .orElseThrow(() -> new NotFoundException("User not found"));
     }
 
     public List<HomeResponse> getMyHomes() {
         User currentUser = getCurrentUser();
         List<HomeMember> memberships = homeMemberRepository.findByUserId(currentUser.id);
-        
+
         return memberships.stream()
                 .map(member -> {
                     Home home = member.home;
@@ -66,11 +66,11 @@ public class HomeService {
     @Transactional
     public HomeResponse createHome(CreateHomeRequest request) {
         User currentUser = getCurrentUser();
-        
+
         Home home = Home.builder()
                 .name(request.getName())
                 .build();
-        
+
         homeRepository.persist(home);
 
         HomeMember membership = HomeMember.builder()
@@ -79,9 +79,9 @@ public class HomeService {
                 .user(currentUser)
                 .role(HomeMember.Role.OWNER)
                 .build();
-        
+
         homeMemberRepository.persist(membership);
-        
+
         // Refresh home to get the updated list of members (which now contains the owner)
         // Or manually construct the response since we know it's just the owner
         return HomeResponse.builder()
@@ -92,27 +92,26 @@ public class HomeService {
     }
 
     @Transactional
-    public void deleteHome(Long homeId) {
+    public void deleteHome(UUID homeId) {
         Home home = homeRepository.findByIdOptional(homeId)
                 .orElseThrow(() -> new NotFoundException("Home not found"));
-        
+
         // TODO: Vérifier si l'utilisateur courant est OWNER avant de supprimer
         // Pour l'instant on suppose que c'est autorisé
-        
         homeRepository.delete(home);
     }
 
     @Transactional
-    public void addMember(Long homeId, AddMemberRequest request) {
+    public void addMember(UUID homeId, AddMemberRequest request) {
         Home home = homeRepository.findByIdOptional(homeId)
                 .orElseThrow(() -> new NotFoundException("Home not found"));
-        
+
         User userToAdd = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new NotFoundException("User with email " + request.getEmail() + " not found"));
 
         // Check if already member
         if (home.members.stream().anyMatch(m -> m.user.id.equals(userToAdd.id))) {
-             throw new IllegalArgumentException("User is already a member of this home");
+            throw new IllegalArgumentException("User is already a member of this home");
         }
 
         HomeMember membership = HomeMember.builder()
@@ -121,32 +120,31 @@ public class HomeService {
                 .user(userToAdd)
                 .role(HomeMember.Role.GUEST)
                 .build();
-        
+
         homeMemberRepository.persist(membership);
     }
 
     @Transactional
-    public void removeMember(Long homeId, Long userId) {
+    public void removeMember(UUID homeId, UUID userId) {
         HomeMemberId id = new HomeMemberId(homeId, userId);
         HomeMember membership = homeMemberRepository.findByIdOptional(id)
                 .orElseThrow(() -> new NotFoundException("Membership not found"));
-        
+
         homeMemberRepository.delete(membership);
     }
 
-
-    public List<RoomResponse> getRoomsByHomeId(Long homeId) {
+    public List<RoomResponse> getRoomsByHomeId(UUID homeId) {
         return roomRepository.findByHomeId(homeId).stream()
                 .map(room -> RoomResponse.builder()
-                        .id(room.id)
-                        .name(room.name)
-                        .homeId(room.home.id)
-                        .build())
+                .id(room.id)
+                .name(room.name)
+                .homeId(room.home.id)
+                .build())
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public RoomResponse createRoom(Long homeId, CreateRoomRequest request) {
+    public RoomResponse createRoom(UUID homeId, CreateRoomRequest request) {
         Home home = homeRepository.findByIdOptional(homeId)
                 .orElseThrow(() -> new NotFoundException("Home not found"));
 
@@ -165,16 +163,15 @@ public class HomeService {
     }
 
     @Transactional
-    public void deleteRoom(Long roomId) {
+    public void deleteRoom(UUID roomId) {
         Room room = roomRepository.findByIdOptional(roomId)
                 .orElseThrow(() -> new NotFoundException("Room not found"));
-        
+
         // La suppression en cascade des plantes dépend de la config JPA.
         // Si CascadeType.ALL n'est pas mis sur la relation OneToMany dans Room (ce qui n'est pas le cas ici car la relation est dans Plant),
         // il faut supprimer les plantes manuellement ou compter sur la FK constraint ON DELETE CASCADE de la DB.
         // Ici, on va laisser Hibernate gérer si possible, sinon il faudra supprimer les plantes avant.
         // Pour l'instant, on tente la suppression directe.
-        
         roomRepository.delete(room);
     }
 

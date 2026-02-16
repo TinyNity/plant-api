@@ -10,6 +10,7 @@ import org.ili.repository.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -32,7 +33,7 @@ public class PlantService {
 
     // Simulation Auth
     private User getCurrentUser() {
-        return userRepository.findByIdOptional(1L)
+        return userRepository.findAll().firstResultOptional()
                 .orElseThrow(() -> new NotFoundException("User not found"));
     }
 
@@ -55,7 +56,7 @@ public class PlantService {
     }
 
     @Transactional
-    public PlantResponse updatePlant(Long id, UpdatePlantRequest request) {
+    public PlantResponse updatePlant(UUID id, UpdatePlantRequest request) {
         Plant plant = plantRepository.findByIdOptional(id)
                 .orElseThrow(() -> new NotFoundException("Plant not found"));
 
@@ -81,7 +82,7 @@ public class PlantService {
         return mapToPlantResponse(plant);
     }
 
-    public PlantResponse getPlantById(Long id) {
+    public PlantResponse getPlantById(UUID id) {
         Plant plant = plantRepository.findByIdOptional(id)
                 .orElseThrow(() -> new NotFoundException("Plant not found"));
         return mapToPlantResponse(plant);
@@ -94,10 +95,10 @@ public class PlantService {
     }
 
     @Transactional
-    public void addCareLog(Long plantId, CreateLogRequest request) {
+    public void addCareLog(UUID plantId, CreateLogRequest request) {
         Plant plant = plantRepository.findByIdOptional(plantId)
                 .orElseThrow(() -> new NotFoundException("Plant not found"));
-        
+
         User currentUser = getCurrentUser();
 
         CareLog log = CareLog.builder()

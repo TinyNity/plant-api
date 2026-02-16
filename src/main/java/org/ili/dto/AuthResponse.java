@@ -1,6 +1,5 @@
 package org.ili.dto;
 
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,9 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RoomResponse {
+public class AuthResponse {
 
-    private UUID id;
-    private String name;
-    private UUID homeId;
+    private String accessToken;
+    private String refreshToken;
 }
