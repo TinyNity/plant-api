@@ -14,6 +14,7 @@ import org.ili.entity.HomeMember;
 import org.ili.entity.HomeMemberId;
 import org.ili.entity.Room;
 import org.ili.entity.User;
+import org.ili.enumeration.Role;
 import org.ili.repository.HomeMemberRepository;
 import org.ili.repository.HomeRepository;
 import org.ili.repository.RoomRepository;
@@ -77,7 +78,7 @@ public class HomeService {
                 .id(new HomeMemberId(home.id, currentUser.id))
                 .home(home)
                 .user(currentUser)
-                .role(HomeMember.Role.OWNER)
+                .role(Role.OWNER)
                 .build();
 
         homeMemberRepository.persist(membership);
@@ -118,7 +119,7 @@ public class HomeService {
                 .id(new HomeMemberId(home.id, userToAdd.id))
                 .home(home)
                 .user(userToAdd)
-                .role(HomeMember.Role.GUEST)
+                .role(Role.GUEST)
                 .build();
 
         homeMemberRepository.persist(membership);

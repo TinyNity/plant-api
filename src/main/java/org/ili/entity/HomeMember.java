@@ -1,5 +1,7 @@
 package org.ili.entity;
 
+import org.ili.enumeration.Role;
+
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -32,7 +34,5 @@ public class HomeMember extends PanacheEntityBase {
     @Column(nullable = false)
     public Role role;
 
-    public enum Role {
-        OWNER, GUEST, ADMIN
-    }
+
 }
