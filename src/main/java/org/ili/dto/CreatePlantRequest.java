@@ -17,4 +17,5 @@ public class CreatePlantRequest {
     private Integer wateringFrequency;
     private LocalDate lastWateredDate;
     private UUID roomId;
+
 }
