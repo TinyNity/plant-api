@@ -13,7 +13,7 @@ public class PlantListTest {
     public void testGetAllPlants() {
         // Should return at least 11 plants from import.sql
         given()
-                .when().get("/plants")
+                .when().get("/api/v1/plants")
                 .then()
                 .statusCode(200)
                 .body("size()", is(11));

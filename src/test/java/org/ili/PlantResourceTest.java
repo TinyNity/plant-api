@@ -23,7 +23,7 @@ public class PlantResourceTest {
     @Order(1)
     public void testGetRooms() {
         given()
-                .when().get("/homes/33333333-3333-3333-3333-333333333333/rooms")
+                .when().get("/api/v1/homes/33333333-3333-3333-3333-333333333333/rooms")
                 .then()
                 .statusCode(200)
                 .body("size()", is(3))
@@ -44,7 +44,7 @@ public class PlantResourceTest {
         given()
                 .contentType(ContentType.JSON)
                 .body(request)
-                .when().post("/plants")
+                .when().post("/api/v1/plants")
                 .then()
                 .statusCode(201)
                 .body("name", is("Monstera"))
@@ -55,7 +55,7 @@ public class PlantResourceTest {
     @Order(3)
     public void testGetPlant() {
         given()
-                .when().get("/plants/55555555-5555-5555-5555-555555555501")
+                .when().get("/api/v1/plants/55555555-5555-5555-5555-555555555501")
                 .then()
                 .statusCode(200)
                 .body("name", is("Ficus"));
@@ -69,12 +69,12 @@ public class PlantResourceTest {
         given()
                 .contentType(ContentType.JSON)
                 .body(request)
-                .when().post("/plants/55555555-5555-5555-5555-555555555501/logs")
+                .when().post("/api/v1/plants/55555555-5555-5555-5555-555555555501/logs")
                 .then()
                 .statusCode(201);
 
         given()
-                .when().get("/plants/55555555-5555-5555-5555-555555555501")
+                .when().get("/api/v1/plants/55555555-5555-5555-5555-555555555501")
                 .then()
                 .statusCode(200)
                 .body("lastWateredDate", is(LocalDate.now().toString()));

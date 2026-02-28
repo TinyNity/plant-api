@@ -27,7 +27,7 @@ public class HomeResourceTest {
         String id = given()
                 .contentType(ContentType.JSON)
                 .body(request)
-                .when().post("/homes")
+                .when().post("/api/v1/homes")
                 .then()
                 .statusCode(201)
                 .body("name", is("My Test Home"))
@@ -41,7 +41,7 @@ public class HomeResourceTest {
     @Order(2)
     public void testGetMyHomes() {
         given()
-                .when().get("/homes")
+                .when().get("/api/v1/homes")
                 .then()
                 .statusCode(200)
                 .body("size()", is(2));
@@ -55,7 +55,7 @@ public class HomeResourceTest {
         given()
                 .contentType(ContentType.JSON)
                 .body(request)
-                .when().post("/homes/2/members")
+                .when().post("/api/v1/homes/" + createdHomeId + "/members")
                 .then()
                 .statusCode(200);
     }
@@ -63,9 +63,10 @@ public class HomeResourceTest {
     @Test
     @Order(4)
     public void testRemoveMember() {
-        // Remove Bob (ID 2) from home ID 2
+        // Remove Bob from the newly created home
+        // 22222222-2222-2222-2222-222222222222 is Bob's UUID
         given()
-                .when().delete("/homes/2/members/2")
+                .when().delete("/api/v1/homes/" + createdHomeId + "/members/22222222-2222-2222-2222-222222222222")
                 .then()
                 .statusCode(204);
     }

@@ -39,10 +39,11 @@ public class HomeService {
     @Inject
     UserRepository userRepository;
 
-    // Simulation Auth: renvoie l'utilisateur ID 1
+    // Simulation Auth: Prioriser un utilisateur connu (Alice) pour les tests, sinon le premier trouvé.
     private User getCurrentUser() {
-        return userRepository.findAll().firstResultOptional()
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        return userRepository.findByEmail("alice@example.com")
+                .orElseGet(() -> userRepository.findAll().firstResultOptional()
+                .orElseThrow(() -> new NotFoundException("User not found")));
     }
 
     public List<HomeResponse> getMyHomes() {

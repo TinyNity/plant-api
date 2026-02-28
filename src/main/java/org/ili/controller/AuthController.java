@@ -28,6 +28,13 @@ import org.ili.service.AuthService;
 import jakarta.validation.Valid;
 import java.util.UUID;
 
+/**
+ * Controller exposing REST endpoints for user authentication.
+ * <p>
+ * This block contains operations for registering new users, logging in,
+ * refreshing access tokens, and logging out. It relies on {@link AuthService}
+ * for the underlying business logic.
+ */
 @Path("/api/v1/auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -40,6 +47,16 @@ public class AuthController {
     @Inject
     JsonWebToken jwt;
 
+    /**
+     * Registers a new user with the provided credentials.
+     * <p>
+     * If the registration is successful, this method returns an
+     * {@link AuthResponse} containing a fresh access token and refresh token
+     * for the user.
+     *
+     * @param request The registration details (email, username, password).
+     * @return A 201 Created response containing the authentication tokens.
+     */
     @POST
     @Path("/register")
     @PermitAll
@@ -53,6 +70,13 @@ public class AuthController {
         return Response.status(Response.Status.CREATED).entity(response).build();
     }
 
+    /**
+     * Validates the provided credentials against the stored hash in the
+     * database. If valid, it returns a new pair of access and refresh tokens.
+     *
+     * @param request The login credentials (email, password).
+     * @return A 200 OK response containing the authentication tokens.
+     */
     @POST
     @Path("/login")
     @PermitAll
@@ -65,6 +89,16 @@ public class AuthController {
         return Response.ok(response).build();
     }
 
+    /**
+     * Refreshes an expired access token using a valid refresh token.
+     * <p>
+     * The provided refresh token is parsed and validated. If it's valid, not
+     * expired, and the associated user still exists, a new pair of tokens is
+     * generated and returned.
+     *
+     * @param request The request containing the refresh token.
+     * @return A 200 OK response containing the new authentication tokens.
+     */
     @POST
     @Path("/refresh")
     @PermitAll
@@ -77,6 +111,15 @@ public class AuthController {
         return Response.ok(response).build();
     }
 
+    /**
+     * Logs out the currently authenticated user.
+     * <p>
+     * Revokes access by handling token invalidation if implemented in a
+     * stateful setup. Requires the user to be authenticated (having a valid
+     * "MEMBER" or "ADMIN" role).
+     *
+     * @return A 204 No Content response on successful logout.
+     */
     @POST
     @Path("/logout")
     @RolesAllowed({"MEMBER", "ADMIN"})
@@ -89,6 +132,15 @@ public class AuthController {
         return Response.noContent().build();
     }
 
+    /**
+     * Retrieves the profile information of the currently authenticated user.
+     * <p>
+     * It uses the 'subject' claim from the provided JWT token to find the user
+     * in the database.
+     *
+     * @return A 200 OK response containing a {@link UserResponse} object with
+     * the user's details.
+     */
     @GET
     @Path("/me")
     @RolesAllowed({"MEMBER", "ADMIN"})
