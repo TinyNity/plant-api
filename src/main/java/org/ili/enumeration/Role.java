@@ -1,5 +1,5 @@
 package org.ili.enumeration;
 
 public enum Role {
-    OWNER, GUEST, ADMIN
+    GUEST, ADMIN, OWNER
 }

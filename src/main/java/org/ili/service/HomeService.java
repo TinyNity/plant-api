@@ -19,6 +19,7 @@ import org.ili.repository.HomeMemberRepository;
 import org.ili.repository.HomeRepository;
 import org.ili.repository.RoomRepository;
 import org.ili.repository.UserRepository;
+import io.quarkus.security.ForbiddenException;
 
 import java.util.List;
 import java.util.UUID;
@@ -44,6 +45,13 @@ public class HomeService {
         return userRepository.findByEmail("alice@example.com")
                 .orElseGet(() -> userRepository.findAll().firstResultOptional()
                 .orElseThrow(() -> new NotFoundException("User not found")));
+    }
+
+    private Role getUserPermission(UUID homeId, UUID userId){
+        HomeMemberId id = new HomeMemberId(homeId, userId);
+        HomeMember membership = homeMemberRepository.findByIdOptional(id)
+                                .orElseThrow(()-> new IllegalArgumentException("User is not a member of this home"));
+        return membership.role;
     }
 
     public List<HomeResponse> getMyHomes() {
@@ -98,9 +106,10 @@ public class HomeService {
         Home home = homeRepository.findByIdOptional(homeId)
                 .orElseThrow(() -> new NotFoundException("Home not found"));
 
-        // TODO: Vérifier si l'utilisateur courant est OWNER avant de supprimer
-        // Pour l'instant on suppose que c'est autorisé
-        homeRepository.delete(home);
+        if (getUserPermission(homeId, getCurrentUser().id) == (Role.OWNER)){
+                homeRepository.delete(home);
+        }
+        throw new ForbiddenException("Current user does not have enough permission");
     }
 
     @Transactional
@@ -108,9 +117,15 @@ public class HomeService {
         Home home = homeRepository.findByIdOptional(homeId)
                 .orElseThrow(() -> new NotFoundException("Home not found"));
 
+        Role currentUserPermission = getUserPermission(homeId, getCurrentUser().id);
+
+        if (currentUserPermission == Role.GUEST) {
+                throw new ForbiddenException("Current user does not have enough permission");
+        }
+
         User userToAdd = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new NotFoundException("User with email " + request.getEmail() + " not found"));
-
+        
         // Check if already member
         if (home.members.stream().anyMatch(m -> m.user.id.equals(userToAdd.id))) {
             throw new IllegalArgumentException("User is already a member of this home");
@@ -132,6 +147,13 @@ public class HomeService {
         HomeMember membership = homeMemberRepository.findByIdOptional(id)
                 .orElseThrow(() -> new NotFoundException("Membership not found"));
 
+        Role userPermission = getUserPermission(homeId, userId);        
+        Role currentUserPermission = getUserPermission(homeId, getCurrentUser().id);
+        
+        if (currentUserPermission.compareTo(userPermission) <= 0){
+                throw new ForbiddenException("Current user does not have enough permission");
+        }
+
         homeMemberRepository.delete(membership);
     }
 
@@ -149,6 +171,10 @@ public class HomeService {
     public RoomResponse createRoom(UUID homeId, CreateRoomRequest request) {
         Home home = homeRepository.findByIdOptional(homeId)
                 .orElseThrow(() -> new NotFoundException("Home not found"));
+        Role currentUserPermission = getUserPermission(homeId, getCurrentUser().id);
+        if (currentUserPermission == Role.GUEST){
+                throw new ForbiddenException("Current user does not have enough permission");
+        }
 
         Room room = Room.builder()
                 .name(request.getName())
@@ -169,6 +195,10 @@ public class HomeService {
         Room room = roomRepository.findByIdOptional(roomId)
                 .orElseThrow(() -> new NotFoundException("Room not found"));
 
+        Role currentUserPermission = getUserPermission(room.home.id, getCurrentUser().id);
+        if (currentUserPermission == Role.GUEST){
+                throw new ForbiddenException("Current user does not have enough permission");
+        }
         // La suppression en cascade des plantes dépend de la config JPA.
         // Si CascadeType.ALL n'est pas mis sur la relation OneToMany dans Room (ce qui n'est pas le cas ici car la relation est dans Plant),
         // il faut supprimer les plantes manuellement ou compter sur la FK constraint ON DELETE CASCADE de la DB.
