@@ -13,12 +13,13 @@ import org.ili.dto.AuthResponse;
 import org.ili.dto.LoginRequest;
 import org.ili.dto.RegisterRequest;
 import org.ili.dto.UserResponse;
+import org.ili.entity.RefreshToken;
 import org.ili.entity.User;
+import org.ili.repository.RefreshTokenRepository;
 import org.ili.repository.UserRepository;
 
 import java.time.Duration;
-import java.util.Collections;
-import java.util.HashSet;
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
@@ -27,12 +28,28 @@ import java.util.UUID;
  * <p>
  * This includes user registration, password hashing/verification, and managing
  * the issuance of JWT access and refresh tokens.
+ * <p>
+ * Refresh tokens are persisted in the database so they can be revoked on
+ * logout, making the otherwise stateless JWT flow controllable server-side.
  */
 @ApplicationScoped
 public class AuthService {
 
+    /**
+     * Lifetime of a short-lived access token.
+     */
+    private static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(15);
+
+    /**
+     * Lifetime of a long-lived refresh token.
+     */
+    private static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(7);
+
     @Inject
     UserRepository userRepository;
+
+    @Inject
+    RefreshTokenRepository refreshTokenRepository;
 
     @ConfigProperty(name = "mp.jwt.verify.issuer", defaultValue = "https://xmobilite.com/issuer")
     String issuer;
@@ -70,10 +87,7 @@ public class AuthService {
 
         userRepository.persist(user);
 
-        String accessToken = generateToken(user.id, user.email, Duration.ofMinutes(15));
-        String refreshToken = generateToken(user.id, user.email, Duration.ofDays(7));
-
-        return new AuthResponse(accessToken, refreshToken);
+        return buildAndPersistTokenPair(user);
     }
 
     /**
@@ -88,6 +102,7 @@ public class AuthService {
      * @throws WebApplicationException with HTTP 401 Unauthorized for invalid
      * credentials.
      */
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new WebApplicationException("Invalid credentials", Response.Status.UNAUTHORIZED));
@@ -96,36 +111,42 @@ public class AuthService {
             throw new WebApplicationException("Invalid credentials", Response.Status.UNAUTHORIZED);
         }
 
-        String accessToken = generateToken(user.id, user.email, Duration.ofMinutes(15));
-        String refreshToken = generateToken(user.id, user.email, Duration.ofDays(7));
-
-        return new AuthResponse(accessToken, refreshToken);
+        return buildAndPersistTokenPair(user);
     }
 
     /**
      * Refreshes JWT tokens using a valid refresh token.
      * <p>
      * Parses the provided token securely using the JWT parser. Extracts the
-     * subject (User ID), verifies the user exists in the database, and issues a
-     * fresh pair of tokens.
+     * subject (User ID), verifies the token exists in the database (i.e., has
+     * not been revoked), and issues a fresh pair of tokens. The old token is
+     * deleted as part of token rotation.
      *
-     * @param refreshToken the unexpired refresh JWT token string.
+     * @param rawRefreshToken the unexpired refresh JWT token string.
      * @return {@link AuthResponse} containing the new access and refresh
      * tokens.
      * @throws WebApplicationException with HTTP 401 Unauthorized if token is
-     * invalid, expired, or user not found.
+     * invalid, expired, revoked, or user not found.
      */
-    public AuthResponse refresh(String refreshToken) {
+    @Transactional
+    public AuthResponse refresh(String rawRefreshToken) {
         try {
-            JsonWebToken jwt = jwtParser.parse(refreshToken);
+            JsonWebToken jwt = jwtParser.parse(rawRefreshToken);
             UUID userId = UUID.fromString(jwt.getSubject());
+
+            // Reject the token if it was revoked (not present in the DB)
+            RefreshToken stored = refreshTokenRepository.findByToken(rawRefreshToken)
+                    .orElseThrow(() -> new WebApplicationException("Refresh token has been revoked", Response.Status.UNAUTHORIZED));
+
             User user = userRepository.findByIdOptional(userId)
                     .orElseThrow(() -> new WebApplicationException("User not found", Response.Status.UNAUTHORIZED));
 
-            String newAccessToken = generateToken(user.id, user.email, Duration.ofMinutes(15));
-            String newRefreshToken = generateToken(user.id, user.email, Duration.ofDays(7));
+            // Rotate: delete the old token before issuing a new pair
+            refreshTokenRepository.delete(stored);
 
-            return new AuthResponse(newAccessToken, newRefreshToken);
+            return buildAndPersistTokenPair(user);
+        } catch (WebApplicationException e) {
+            throw e;
         } catch (Exception e) {
             throw new WebApplicationException("Invalid refresh token", Response.Status.UNAUTHORIZED);
         }
@@ -134,13 +155,19 @@ public class AuthService {
     /**
      * Logs out the user with the given ID.
      * <p>
-     * This is an intentional stub for potential future stateful token
-     * management, allowing refresh token invalidation in a data store or cache.
+     * Revokes all active refresh tokens for the user by deleting them from the
+     * database. This prevents any further token-refresh operations, effectively
+     * terminating all active sessions for that user.
      *
      * @param userId the ID of the user requesting logout.
      */
+    @Transactional
     public void logout(UUID userId) {
-        // logic to revoke tokens if stateful
+        long deleted = refreshTokenRepository.deleteAllByUserId(userId);
+        if (deleted == 0) {
+            // The user may have already logged out or never had a refresh token persisted.
+            // This is not an error — we treat logout as idempotent.
+        }
     }
 
     /**
@@ -160,6 +187,35 @@ public class AuthService {
                 .username(user.username)
                 .email(user.email)
                 .build();
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+    /**
+     * Generates a signed access token and a signed refresh token, persists the
+     * refresh token to the database, and returns both wrapped in an
+     * {@link AuthResponse}.
+     *
+     * @param user the authenticated user.
+     * @return {@link AuthResponse} with the new token pair.
+     */
+    private AuthResponse buildAndPersistTokenPair(User user) {
+        Instant now = Instant.now();
+
+        String accessToken = generateToken(user.id, user.email, ACCESS_TOKEN_DURATION);
+        String refreshToken = generateToken(user.id, user.email, REFRESH_TOKEN_DURATION);
+
+        RefreshToken tokenEntity = RefreshToken.builder()
+                .user(user)
+                .token(refreshToken)
+                .createdAt(now)
+                .expiresAt(now.plus(REFRESH_TOKEN_DURATION))
+                .build();
+
+        refreshTokenRepository.persist(tokenEntity);
+
+        return new AuthResponse(accessToken, refreshToken);
     }
 
     /**
