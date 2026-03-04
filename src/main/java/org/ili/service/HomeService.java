@@ -9,6 +9,7 @@ import org.ili.dto.CreateHomeRequest;
 import org.ili.dto.CreateRoomRequest;
 import org.ili.dto.HomeResponse;
 import org.ili.dto.RoomResponse;
+import org.ili.dto.UserResponse;
 import org.ili.entity.Home;
 import org.ili.entity.HomeMember;
 import org.ili.entity.HomeMemberId;
@@ -28,183 +29,184 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class HomeService {
 
-    @Inject
-    HomeRepository homeRepository;
+	@Inject
+	HomeRepository homeRepository;
 
-    @Inject
-    RoomRepository roomRepository;
+	@Inject
+	RoomRepository roomRepository;
 
-    @Inject
-    HomeMemberRepository homeMemberRepository;
+	@Inject
+	HomeMemberRepository homeMemberRepository;
 
-    @Inject
-    UserRepository userRepository;
+	@Inject
+	UserRepository userRepository;
 
-    // Simulation Auth: Prioriser un utilisateur connu (Alice) pour les tests, sinon le premier trouvé.
-    private User getCurrentUser() {
-        return userRepository.findByEmail("alice@example.com")
-                .orElseGet(() -> userRepository.findAll().firstResultOptional()
-                .orElseThrow(() -> new NotFoundException("User not found")));
-    }
+	@Inject
+	AuthService authService;
 
-    private Role getUserPermission(UUID homeId, UUID userId){
-        HomeMemberId id = new HomeMemberId(homeId, userId);
-        HomeMember membership = homeMemberRepository.findByIdOptional(id)
-                                .orElseThrow(()-> new IllegalArgumentException("User is not a member of this home"));
-        return membership.role;
-    }
+	private Role getUserPermission(UUID homeId, UUID userId) {
+		HomeMemberId id = new HomeMemberId(homeId, userId);
+		HomeMember membership = homeMemberRepository.findByIdOptional(id)
+				.orElseThrow(() -> new IllegalArgumentException("User is not a member of this home"));
+		return membership.role;
+	}
 
-    public List<HomeResponse> getMyHomes() {
-        User currentUser = getCurrentUser();
-        List<HomeMember> memberships = homeMemberRepository.findByUserId(currentUser.id);
+	public List<HomeResponse> getMyHomes() {
+		User currentUser = authService.getCurrentUser();
+		List<HomeMember> memberships = homeMemberRepository.findByUserId(currentUser.id);
 
-        return memberships.stream()
-                .map(member -> {
-                    Home home = member.home;
-                    List<String> memberNames = home.members.stream()
-                            .map(m -> m.user.username)
-                            .collect(Collectors.toList());
-                    return HomeResponse.builder()
-                            .id(home.id)
-                            .name(home.name)
-                            .memberUsernames(memberNames)
-                            .build();
-                })
-                .collect(Collectors.toList());
-    }
+		return memberships.stream()
+				.map(member -> {
+					Home home = member.home;
+					List<String> memberNames = home.members.stream()
+							.map(m -> m.user.username)
+							.collect(Collectors.toList());
+					return HomeResponse.builder()
+							.id(home.id)
+							.name(home.name)
+							.memberUsernames(memberNames)
+							.build();
+				})
+				.collect(Collectors.toList());
+	}
 
-    @Transactional
-    public HomeResponse createHome(CreateHomeRequest request) {
-        User currentUser = getCurrentUser();
+	@Transactional
+	public HomeResponse createHome(CreateHomeRequest request) {
 
-        Home home = Home.builder()
-                .name(request.getName())
-                .build();
+		User currentUser = authService.getCurrentUser();
 
-        homeRepository.persist(home);
+		Home home = Home.builder()
+				.name(request.getName())
+				.build();
 
-        HomeMember membership = HomeMember.builder()
-                .id(new HomeMemberId(home.id, currentUser.id))
-                .home(home)
-                .user(currentUser)
-                .role(Role.OWNER)
-                .build();
+		homeRepository.persist(home);
 
-        homeMemberRepository.persist(membership);
+		HomeMember membership = HomeMember.builder()
+				.id(new HomeMemberId(home.id, currentUser.getId()))
+				.home(home)
+				.user(currentUser)
+				.role(Role.OWNER)
+				.build();
 
-        // Refresh home to get the updated list of members (which now contains the owner)
-        // Or manually construct the response since we know it's just the owner
-        return HomeResponse.builder()
-                .id(home.id)
-                .name(home.name)
-                .memberUsernames(List.of(currentUser.username))
-                .build();
-    }
+		homeMemberRepository.persist(membership);
 
-    @Transactional
-    public void deleteHome(UUID homeId) {
-        Home home = homeRepository.findByIdOptional(homeId)
-                .orElseThrow(() -> new NotFoundException("Home not found"));
+		// Refresh home to get the updated list of members (which now contains the
+		// owner)
+		// Or manually construct the response since we know it's just the owner
+		return HomeResponse.builder()
+				.id(home.id)
+				.name(home.name)
+				.memberUsernames(List.of(currentUser.username))
+				.build();
+	}
 
-        if (getUserPermission(homeId, getCurrentUser().id) == (Role.OWNER)){
-                homeRepository.delete(home);
-        }
-        throw new ForbiddenException("Current user does not have enough permission");
-    }
+	@Transactional
+	public void deleteHome(UUID homeId) {
+		Home home = homeRepository.findByIdOptional(homeId)
+				.orElseThrow(() -> new NotFoundException("Home not found"));
 
-    @Transactional
-    public void addMember(UUID homeId, AddMemberRequest request) {
-        Home home = homeRepository.findByIdOptional(homeId)
-                .orElseThrow(() -> new NotFoundException("Home not found"));
+		if (getUserPermission(homeId, authService.getCurrentUser().id) == (Role.OWNER)) {
+			homeRepository.delete(home);
+		}
+		throw new ForbiddenException("Current user does not have enough permission");
+	}
 
-        Role currentUserPermission = getUserPermission(homeId, getCurrentUser().id);
+	@Transactional
+	public void addMember(UUID homeId, AddMemberRequest request) {
+		Home home = homeRepository.findByIdOptional(homeId)
+				.orElseThrow(() -> new NotFoundException("Home not found"));
 
-        if (currentUserPermission == Role.GUEST) {
-                throw new ForbiddenException("Current user does not have enough permission");
-        }
+		Role currentUserPermission = getUserPermission(homeId, authService.getCurrentUser().id);
 
-        User userToAdd = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new NotFoundException("User with email " + request.getEmail() + " not found"));
-        
-        // Check if already member
-        if (home.members.stream().anyMatch(m -> m.user.id.equals(userToAdd.id))) {
-            throw new IllegalArgumentException("User is already a member of this home");
-        }
+		if (currentUserPermission == Role.GUEST) {
+			throw new ForbiddenException("Current user does not have enough permission");
+		}
 
-        HomeMember membership = HomeMember.builder()
-                .id(new HomeMemberId(home.id, userToAdd.id))
-                .home(home)
-                .user(userToAdd)
-                .role(Role.GUEST)
-                .build();
+		User userToAdd = userRepository.findByEmail(request.getEmail())
+				.orElseThrow(() -> new NotFoundException("User with email " + request.getEmail() + " not found"));
 
-        homeMemberRepository.persist(membership);
-    }
+		// Check if already member
+		if (home.members.stream().anyMatch(m -> m.user.id.equals(userToAdd.id))) {
+			throw new IllegalArgumentException("User is already a member of this home");
+		}
 
-    @Transactional
-    public void removeMember(UUID homeId, UUID userId) {
-        HomeMemberId id = new HomeMemberId(homeId, userId);
-        HomeMember membership = homeMemberRepository.findByIdOptional(id)
-                .orElseThrow(() -> new NotFoundException("Membership not found"));
+		HomeMember membership = HomeMember.builder()
+				.id(new HomeMemberId(home.id, userToAdd.id))
+				.home(home)
+				.user(userToAdd)
+				.role(Role.GUEST)
+				.build();
 
-        Role userPermission = getUserPermission(homeId, userId);        
-        Role currentUserPermission = getUserPermission(homeId, getCurrentUser().id);
-        
-        if (currentUserPermission.compareTo(userPermission) <= 0){
-                throw new ForbiddenException("Current user does not have enough permission");
-        }
+		homeMemberRepository.persist(membership);
+	}
 
-        homeMemberRepository.delete(membership);
-    }
+	@Transactional
+	public void removeMember(UUID homeId, UUID userId) {
+		HomeMemberId id = new HomeMemberId(homeId, userId);
+		HomeMember membership = homeMemberRepository.findByIdOptional(id)
+				.orElseThrow(() -> new NotFoundException("Membership not found"));
 
-    public List<RoomResponse> getRoomsByHomeId(UUID homeId) {
-        return roomRepository.findByHomeId(homeId).stream()
-                .map(room -> RoomResponse.builder()
-                .id(room.id)
-                .name(room.name)
-                .homeId(room.home.id)
-                .build())
-                .collect(Collectors.toList());
-    }
+		Role userPermission = getUserPermission(homeId, userId);
+		Role currentUserPermission = getUserPermission(homeId, authService.getCurrentUser().id);
 
-    @Transactional
-    public RoomResponse createRoom(UUID homeId, CreateRoomRequest request) {
-        Home home = homeRepository.findByIdOptional(homeId)
-                .orElseThrow(() -> new NotFoundException("Home not found"));
-        Role currentUserPermission = getUserPermission(homeId, getCurrentUser().id);
-        if (currentUserPermission == Role.GUEST){
-                throw new ForbiddenException("Current user does not have enough permission");
-        }
+		if (currentUserPermission.compareTo(userPermission) <= 0) {
+			throw new ForbiddenException("Current user does not have enough permission");
+		}
 
-        Room room = Room.builder()
-                .name(request.getName())
-                .home(home)
-                .build();
+		homeMemberRepository.delete(membership);
+	}
 
-        roomRepository.persist(room);
+	public List<RoomResponse> getRoomsByHomeId(UUID homeId) {
+		return roomRepository.findByHomeId(homeId).stream()
+				.map(room -> RoomResponse.builder()
+						.id(room.id)
+						.name(room.name)
+						.homeId(room.home.id)
+						.build())
+				.collect(Collectors.toList());
+	}
 
-        return RoomResponse.builder()
-                .id(room.id)
-                .name(room.name)
-                .homeId(home.id)
-                .build();
-    }
+	@Transactional
+	public RoomResponse createRoom(UUID homeId, CreateRoomRequest request) {
+		Home home = homeRepository.findByIdOptional(homeId)
+				.orElseThrow(() -> new NotFoundException("Home not found"));
+		Role currentUserPermission = getUserPermission(homeId, authService.getCurrentUser().id);
+		if (currentUserPermission == Role.GUEST) {
+			throw new ForbiddenException("Current user does not have enough permission");
+		}
 
-    @Transactional
-    public void deleteRoom(UUID roomId) {
-        Room room = roomRepository.findByIdOptional(roomId)
-                .orElseThrow(() -> new NotFoundException("Room not found"));
+		Room room = Room.builder()
+				.name(request.getName())
+				.home(home)
+				.build();
 
-        Role currentUserPermission = getUserPermission(room.home.id, getCurrentUser().id);
-        if (currentUserPermission == Role.GUEST){
-                throw new ForbiddenException("Current user does not have enough permission");
-        }
-        // La suppression en cascade des plantes dépend de la config JPA.
-        // Si CascadeType.ALL n'est pas mis sur la relation OneToMany dans Room (ce qui n'est pas le cas ici car la relation est dans Plant),
-        // il faut supprimer les plantes manuellement ou compter sur la FK constraint ON DELETE CASCADE de la DB.
-        // Ici, on va laisser Hibernate gérer si possible, sinon il faudra supprimer les plantes avant.
-        // Pour l'instant, on tente la suppression directe.
-        roomRepository.delete(room);
-    }
+		roomRepository.persist(room);
+
+		return RoomResponse.builder()
+				.id(room.id)
+				.name(room.name)
+				.homeId(home.id)
+				.build();
+	}
+
+	@Transactional
+	public void deleteRoom(UUID roomId) {
+		Room room = roomRepository.findByIdOptional(roomId)
+				.orElseThrow(() -> new NotFoundException("Room not found"));
+
+		Role currentUserPermission = getUserPermission(room.home.id, authService.getCurrentUser().id);
+		if (currentUserPermission == Role.GUEST) {
+			throw new ForbiddenException("Current user does not have enough permission");
+		}
+		// La suppression en cascade des plantes dépend de la config JPA.
+		// Si CascadeType.ALL n'est pas mis sur la relation OneToMany dans Room (ce qui
+		// n'est pas le cas ici car la relation est dans Plant),
+		// il faut supprimer les plantes manuellement ou compter sur la FK constraint ON
+		// DELETE CASCADE de la DB.
+		// Ici, on va laisser Hibernate gérer si possible, sinon il faudra supprimer les
+		// plantes avant.
+		// Pour l'instant, on tente la suppression directe.
+		roomRepository.delete(room);
+	}
 
 }

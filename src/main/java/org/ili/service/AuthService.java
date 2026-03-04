@@ -57,6 +57,9 @@ public class AuthService {
     @Inject
     io.smallrye.jwt.auth.principal.JWTParser jwtParser;
 
+    @Inject
+    JsonWebToken jwt;
+
     /**
      * Registers a new user.
      * <p>
@@ -177,17 +180,15 @@ public class AuthService {
      * @return {@link UserResponse} dto containing public user information.
      * @throws WebApplicationException with HTTP 404 Not Found if the user
      * doesn't exist.
-     */
-    public UserResponse getCurrentUser(UUID userId) {
-        User user = userRepository.findByIdOptional(userId)
-                .orElseThrow(() -> new WebApplicationException("User not found", Response.Status.NOT_FOUND));
-
-        return UserResponse.builder()
-                .id(user.id)
-                .username(user.username)
-                .email(user.email)
-                .build();
+    */
+   public User getCurrentUser() {
+       return userRepository.findById(getCurrentUserId());
+   }
+   
+    public UUID getCurrentUserId() {
+        return UUID.fromString(jwt.getSubject());
     }
+
 
     // -------------------------------------------------------------------------
     // Private helpers

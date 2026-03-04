@@ -21,6 +21,7 @@ import org.ili.dto.LoginRequest;
 import org.ili.dto.RefreshRequest;
 import org.ili.dto.RegisterRequest;
 import org.ili.dto.UserResponse;
+import org.ili.entity.User;
 import org.ili.service.AuthService;
 
 import jakarta.validation.Valid;
@@ -147,8 +148,8 @@ public class AuthController {
             content = @Content(schema = @Schema(implementation = UserResponse.class)))
     @APIResponse(responseCode = "401", description = "Not authenticated")
     public Response getCurrentUser() {
-        UUID userId = UUID.fromString(jwt.getSubject());
-        UserResponse response = authService.getCurrentUser(userId);
+        User user = authService.getCurrentUser();
+        UserResponse response = UserResponse.from(user);
         return Response.ok(response).build();
     }
 }
