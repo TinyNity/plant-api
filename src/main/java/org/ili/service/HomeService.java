@@ -9,7 +9,6 @@ import org.ili.dto.CreateHomeRequest;
 import org.ili.dto.CreateRoomRequest;
 import org.ili.dto.HomeResponse;
 import org.ili.dto.RoomResponse;
-import org.ili.dto.UserResponse;
 import org.ili.entity.Home;
 import org.ili.entity.HomeMember;
 import org.ili.entity.HomeMemberId;
@@ -43,13 +42,6 @@ public class HomeService {
 
 	@Inject
 	AuthService authService;
-
-	private Role getUserPermission(UUID homeId, UUID userId) {
-		HomeMemberId id = new HomeMemberId(homeId, userId);
-		HomeMember membership = homeMemberRepository.findByIdOptional(id)
-				.orElseThrow(() -> new IllegalArgumentException("User is not a member of this home"));
-		return membership.role;
-	}
 
 	public List<HomeResponse> getMyHomes() {
 		User currentUser = authService.getCurrentUser();
@@ -105,7 +97,9 @@ public class HomeService {
 		Home home = homeRepository.findByIdOptional(homeId)
 				.orElseThrow(() -> new NotFoundException("Home not found"));
 
-		if (getUserPermission(homeId, authService.getCurrentUser().id) == (Role.OWNER)) {
+		Role currentUserPermission = authService.getUserPermission(home);
+		
+		if (currentUserPermission == Role.OWNER) {
 			homeRepository.delete(home);
 		}
 		throw new ForbiddenException("Current user does not have enough permission");
@@ -116,7 +110,7 @@ public class HomeService {
 		Home home = homeRepository.findByIdOptional(homeId)
 				.orElseThrow(() -> new NotFoundException("Home not found"));
 
-		Role currentUserPermission = getUserPermission(homeId, authService.getCurrentUser().id);
+		Role currentUserPermission = authService.getUserPermission(home);
 
 		if (currentUserPermission == Role.GUEST) {
 			throw new ForbiddenException("Current user does not have enough permission");
@@ -146,8 +140,8 @@ public class HomeService {
 		HomeMember membership = homeMemberRepository.findByIdOptional(id)
 				.orElseThrow(() -> new NotFoundException("Membership not found"));
 
-		Role userPermission = getUserPermission(homeId, userId);
-		Role currentUserPermission = getUserPermission(homeId, authService.getCurrentUser().id);
+		Role userPermission = authService.getUserPermission(homeId, userId);
+		Role currentUserPermission = authService.getUserPermission(homeId, authService.getCurrentUser().id);
 
 		if (currentUserPermission.compareTo(userPermission) <= 0) {
 			throw new ForbiddenException("Current user does not have enough permission");
@@ -170,7 +164,7 @@ public class HomeService {
 	public RoomResponse createRoom(UUID homeId, CreateRoomRequest request) {
 		Home home = homeRepository.findByIdOptional(homeId)
 				.orElseThrow(() -> new NotFoundException("Home not found"));
-		Role currentUserPermission = getUserPermission(homeId, authService.getCurrentUser().id);
+		Role currentUserPermission = authService.getUserPermission(home);
 		if (currentUserPermission == Role.GUEST) {
 			throw new ForbiddenException("Current user does not have enough permission");
 		}
@@ -194,7 +188,7 @@ public class HomeService {
 		Room room = roomRepository.findByIdOptional(roomId)
 				.orElseThrow(() -> new NotFoundException("Room not found"));
 
-		Role currentUserPermission = getUserPermission(room.home.id, authService.getCurrentUser().id);
+		Role currentUserPermission = authService.getUserPermission(room);
 		if (currentUserPermission == Role.GUEST) {
 			throw new ForbiddenException("Current user does not have enough permission");
 		}

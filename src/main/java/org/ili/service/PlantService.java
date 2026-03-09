@@ -6,7 +6,10 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.NotFoundException;
 import org.ili.dto.*;
 import org.ili.entity.*;
+import org.ili.enumeration.Role;
 import org.ili.repository.*;
+
+import io.quarkus.security.ForbiddenException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,21 +29,27 @@ public class PlantService {
     HomeRepository homeRepository;
 
     @Inject
+    HomeMemberRepository homeMemberRepository;
+
+    @Inject
     CareLogRepository careLogRepository;
 
     @Inject
     UserRepository userRepository;
 
-    // Simulation Auth
-    private User getCurrentUser() {
-        return userRepository.findAll().firstResultOptional()
-                .orElseThrow(() -> new NotFoundException("User not found"));
-    }
+    @Inject
+	AuthService authService;
+
 
     @Transactional
     public PlantResponse createPlant(CreatePlantRequest request) {
         Room room = roomRepository.findByIdOptional(request.getRoomId())
                 .orElseThrow(() -> new NotFoundException("Room not found"));
+
+        Role currentUserPermission = authService.getUserPermission(room);
+
+        if (currentUserPermission == Role.GUEST) 
+            throw new ForbiddenException("Current user does not have enough permission");
 
         Plant plant = Plant.builder()
                 .name(request.getName())
@@ -60,12 +69,6 @@ public class PlantService {
         Plant plant = plantRepository.findByIdOptional(id)
                 .orElseThrow(() -> new NotFoundException("Plant not found"));
 
-        if (request.getName() != null) {
-            plant.name = request.getName();
-        }
-        if (request.getSpecies() != null) {
-            plant.species = request.getSpecies();
-        }
         if (request.getWateringFrequency() != null) {
             plant.wateringFrequency = request.getWateringFrequency();
         }
@@ -78,6 +81,20 @@ public class PlantService {
             plant.room = room;
         }
 
+        Role currentUserPermission = authService.getUserPermission(plant);
+
+        if (currentUserPermission == Role.GUEST){
+            plantRepository.persist(plant);
+            return mapToPlantResponse(plant);
+        }
+        
+        if (request.getName() != null) {
+            plant.name = request.getName();
+        }
+        if (request.getSpecies() != null) {
+            plant.species = request.getSpecies();
+        }
+
         plantRepository.persist(plant);
         return mapToPlantResponse(plant);
     }
@@ -85,6 +102,9 @@ public class PlantService {
     public PlantResponse getPlantById(UUID id) {
         Plant plant = plantRepository.findByIdOptional(id)
                 .orElseThrow(() -> new NotFoundException("Plant not found"));
+        
+        authService.getUserPermission(plant);
+
         return mapToPlantResponse(plant);
     }
 
@@ -99,7 +119,7 @@ public class PlantService {
         Plant plant = plantRepository.findByIdOptional(plantId)
                 .orElseThrow(() -> new NotFoundException("Plant not found"));
 
-        User currentUser = getCurrentUser();
+        User currentUser = authService.getCurrentUser();
 
         CareLog log = CareLog.builder()
                 .plant(plant)

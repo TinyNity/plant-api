@@ -13,8 +13,15 @@ import org.ili.dto.AuthResponse;
 import org.ili.dto.LoginRequest;
 import org.ili.dto.RegisterRequest;
 import org.ili.dto.UserResponse;
+import org.ili.entity.Home;
+import org.ili.entity.HomeMember;
+import org.ili.entity.HomeMemberId;
+import org.ili.entity.Plant;
 import org.ili.entity.RefreshToken;
+import org.ili.entity.Room;
 import org.ili.entity.User;
+import org.ili.enumeration.Role;
+import org.ili.repository.HomeMemberRepository;
 import org.ili.repository.RefreshTokenRepository;
 import org.ili.repository.UserRepository;
 
@@ -50,6 +57,9 @@ public class AuthService {
 
     @Inject
     RefreshTokenRepository refreshTokenRepository;
+
+    @Inject
+    HomeMemberRepository homeMemberRepository;
 
     @ConfigProperty(name = "mp.jwt.verify.issuer", defaultValue = "https://xmobilite.com/issuer")
     String issuer;
@@ -181,12 +191,43 @@ public class AuthService {
      * @throws WebApplicationException with HTTP 404 Not Found if the user
      * doesn't exist.
     */
-   public User getCurrentUser() {
-       return userRepository.findById(getCurrentUserId());
-   }
-   
+    public User getCurrentUser() {
+        return userRepository.findById(getCurrentUserId());
+    }
+
     public UUID getCurrentUserId() {
         return UUID.fromString(jwt.getSubject());
+    }
+
+
+    
+    // Retrieve the permission of current user based on his user id 
+    // and the home id
+    public Role getUserPermission(UUID homeId, UUID userId) {
+        HomeMemberId id = new HomeMemberId(homeId, userId);
+		HomeMember membership = homeMemberRepository.findByIdOptional(id)
+        .orElseThrow(() -> new IllegalArgumentException("User is not a member of this home"));
+		return membership.role;
+	}
+    
+    // Retrieve the permission of current user based on the home
+    public Role getUserPermission(Home home){
+        UUID homeId = home.getId();
+        UUID userId = getCurrentUserId();
+        return getUserPermission(homeId,userId);
+    }
+
+    // Retrieve the permission of current user based on the room
+	public Role getUserPermission(Room room) {
+        UUID homeId = room.getHome().getId();
+        UUID userId = getCurrentUser().getId();
+		return getUserPermission(homeId, userId);
+	}
+
+    // Retrieve the permission of current user based on the plant
+    public Role getUserPermission(Plant plant){
+        Room room = plant.getRoom();
+        return getUserPermission(room);
     }
 
 
