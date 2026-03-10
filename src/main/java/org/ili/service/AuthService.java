@@ -1,6 +1,7 @@
 package org.ili.service;
 
 import io.quarkus.elytron.security.common.BcryptUtil;
+import io.quarkus.security.UnauthorizedException;
 import io.smallrye.jwt.build.Jwt;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -192,7 +193,8 @@ public class AuthService {
      * doesn't exist.
     */
     public User getCurrentUser() {
-        return userRepository.findById(getCurrentUserId());
+        return userRepository.findByIdOptional(getCurrentUserId())
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
     }
 
     public UUID getCurrentUserId() {
