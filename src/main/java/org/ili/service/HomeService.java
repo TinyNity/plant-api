@@ -77,7 +77,7 @@ public class HomeService {
 				.id(new HomeMemberId(home.id, currentUser.getId()))
 				.home(home)
 				.user(currentUser)
-				.role(Role.OWNER)
+				.role(Role.ADMIN)
 				.build();
 
 		homeMemberRepository.persist(membership);
@@ -99,7 +99,7 @@ public class HomeService {
 
 		Role currentUserPermission = authService.getUserPermission(home);
 		
-		if (currentUserPermission == Role.OWNER) {
+		if (currentUserPermission == Role.ADMIN) {
 			homeRepository.delete(home);
 		}
 		throw new ForbiddenException("Current user does not have enough permission");
@@ -112,7 +112,7 @@ public class HomeService {
 
 		Role currentUserPermission = authService.getUserPermission(home);
 
-		if (currentUserPermission == Role.GUEST) {
+		if (currentUserPermission != Role.ADMIN) {
 			throw new ForbiddenException("Current user does not have enough permission");
 		}
 
@@ -128,7 +128,7 @@ public class HomeService {
 				.id(new HomeMemberId(home.id, userToAdd.id))
 				.home(home)
 				.user(userToAdd)
-				.role(Role.GUEST)
+				.role(Role.MEMBER)
 				.build();
 
 		homeMemberRepository.persist(membership);
@@ -165,7 +165,7 @@ public class HomeService {
 		Home home = homeRepository.findByIdOptional(homeId)
 				.orElseThrow(() -> new NotFoundException("Home not found"));
 		Role currentUserPermission = authService.getUserPermission(home);
-		if (currentUserPermission == Role.GUEST) {
+		if (currentUserPermission == Role.MEMBER) {
 			throw new ForbiddenException("Current user does not have enough permission");
 		}
 
@@ -189,7 +189,7 @@ public class HomeService {
 				.orElseThrow(() -> new NotFoundException("Room not found"));
 
 		Role currentUserPermission = authService.getUserPermission(room);
-		if (currentUserPermission == Role.GUEST) {
+		if (currentUserPermission == Role.MEMBER) {
 			throw new ForbiddenException("Current user does not have enough permission");
 		}
 		// La suppression en cascade des plantes dépend de la config JPA.

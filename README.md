@@ -18,12 +18,7 @@ docker compose down
 ```sh
 ./mvnw clean test
 ```
-*(Note: Ensure that your `JAVA_HOME` points to a JDK 21 installation, as required by the build).*
 
-Doing something like :
-```sh
-export JAVA_HOME=$(/usr/libexec/java_home -v 21)
-```
 
 ## Running the application in dev mode
 
@@ -33,7 +28,25 @@ You can run your application in dev mode that enables live coding using:
 ./mvnw quarkus:dev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+### Generating dev data with Faker
+
+The legacy SQL mock data has been removed from Flyway. In `dev` profile only, you can now generate large fake datasets on demand with:
+
+```sh
+curl -X POST http://localhost:8080/api/v1/dev/seed \
+  -H "Content-Type: application/json" \
+  -d '{
+    "replaceExisting": true,
+    "userCount": 12,
+    "homesPerUser": 2,
+    "additionalMembersPerHome": 2,
+    "roomsPerHome": 3,
+    "plantsPerRoom": 6,
+    "logsPerPlant": 4
+  }'
+```
+
+The response returns the number of generated records plus a small sample of user credentials. All generated users share the password configured by `%dev.plante.dev-seeder.default-user-password` in [src/main/resources/application.properties](src/main/resources/application.properties).
 
 ## Packaging and running the application
 
@@ -44,17 +57,17 @@ The application can be packaged using:
 ```
 
 It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+Be aware that it’s not an *uber-jar* as the dependencies are copied into the `target/quarkus-app/lib/` directory.
 
 The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
 
-If you want to build an _über-jar_, execute the following command:
+If you want to build an *uber-jar*, execute the following command:
 
 ```sh
 ./mvnw package -Dquarkus.package.jar.type=uber-jar
 ```
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+The application, packaged as an *uber-jar*, is now runnable using `java -jar target/*-runner.jar`.
 
 ## Creating a native executable
 

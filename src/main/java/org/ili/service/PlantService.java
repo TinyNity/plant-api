@@ -46,9 +46,14 @@ public class PlantService {
         Room room = roomRepository.findByIdOptional(request.getRoomId())
                 .orElseThrow(() -> new NotFoundException("Room not found"));
 
-        Role currentUserPermission = authService.getUserPermission(room);
+        Role currentUserPermission;
+        try {
+            currentUserPermission = authService.getUserPermission(room);
+        } catch (IllegalArgumentException e) {
+            throw new ForbiddenException("Current user does not have access to this home");
+        }
 
-        if (currentUserPermission == Role.GUEST) 
+        if (currentUserPermission == Role.GUEST)
             throw new ForbiddenException("Current user does not have enough permission");
 
         Plant plant = Plant.builder()
@@ -69,30 +74,35 @@ public class PlantService {
         Plant plant = plantRepository.findByIdOptional(id)
                 .orElseThrow(() -> new NotFoundException("Plant not found"));
 
-        if (request.getWateringFrequency() != null) {
-            plant.wateringFrequency = request.getWateringFrequency();
+        Role currentUserPermission;
+        try {
+            currentUserPermission = authService.getUserPermission(plant);
+        } catch (IllegalArgumentException e) {
+            throw new ForbiddenException("Current user does not have access to this plant");
         }
+
         if (request.getLastWateredDate() != null) {
             plant.lastWateredDate = request.getLastWateredDate();
         }
-        if (request.getRoomId() != null) {
-            Room room = roomRepository.findByIdOptional(request.getRoomId())
-                    .orElseThrow(() -> new NotFoundException("Room not found"));
-            plant.room = room;
-        }
-
-        Role currentUserPermission = authService.getUserPermission(plant);
 
         if (currentUserPermission == Role.GUEST){
             plantRepository.persist(plant);
             return mapToPlantResponse(plant);
         }
-        
+
         if (request.getName() != null) {
             plant.name = request.getName();
         }
         if (request.getSpecies() != null) {
             plant.species = request.getSpecies();
+        }
+        if (request.getWateringFrequency() != null) {
+            plant.wateringFrequency = request.getWateringFrequency();
+        }
+        if (request.getRoomId() != null) {
+            Room room = roomRepository.findByIdOptional(request.getRoomId())
+                    .orElseThrow(() -> new NotFoundException("Room not found"));
+            plant.room = room;
         }
 
         plantRepository.persist(plant);
@@ -102,14 +112,24 @@ public class PlantService {
     public PlantResponse getPlantById(UUID id) {
         Plant plant = plantRepository.findByIdOptional(id)
                 .orElseThrow(() -> new NotFoundException("Plant not found"));
-        
-        authService.getUserPermission(plant);
-
+        try {
+            authService.getUserPermission(plant);
+        } catch (IllegalArgumentException e) {
+            throw new ForbiddenException("Current user does not have access to this plant");
+        }
         return mapToPlantResponse(plant);
     }
 
     public List<PlantResponse> getAllPlants() {
         return plantRepository.listAll().stream()
+                .filter(plant -> {
+                    try {
+                        authService.getUserPermission(plant);
+                        return true;
+                    } catch (IllegalArgumentException e) {
+                        return false;
+                    }
+                })
                 .map(this::mapToPlantResponse)
                 .collect(Collectors.toList());
     }
@@ -118,6 +138,12 @@ public class PlantService {
     public void addCareLog(UUID plantId, CreateLogRequest request) {
         Plant plant = plantRepository.findByIdOptional(plantId)
                 .orElseThrow(() -> new NotFoundException("Plant not found"));
+
+        try {
+            authService.getUserPermission(plant);
+        } catch (IllegalArgumentException e) {
+            throw new ForbiddenException("Current user does not have access to this plant");
+        }
 
         User currentUser = authService.getCurrentUser();
 
