@@ -45,7 +45,13 @@ public class HomeService {
 
 	public List<HomeResponse> getMyHomes() {
 		User currentUser = authService.getCurrentUser();
-		List<HomeMember> memberships = homeMemberRepository.findByUserId(currentUser.id);
+		List<HomeMember> memberships;
+		try {
+			 memberships = homeMemberRepository.findByUserId(currentUser.id);
+		}
+		catch (Exception e) {
+			throw new IllegalArgumentException("Error occurred while fetching home memberships", e);
+		}
 
 		return memberships.stream()
 				.map(member -> {
