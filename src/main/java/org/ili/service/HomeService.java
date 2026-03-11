@@ -44,8 +44,8 @@ public class HomeService {
 	AuthService authService;
 
 	public HomeResponse getById(UUID id) {
-		Home ret = HomeRepository.findByIdOptional(id).orElseThrow(() -> new NotFoundException(String.format(id.toString())));
-        List<Room> rooms = RoomRepository.findByHomeId(ret.id);
+		Home ret = homeRepository.findByIdOptional(id).orElseThrow(() -> new NotFoundException(String.format(id.toString())));
+        List<Room> rooms = roomRepository.findByHomeId(ret.id);
 
 		return HomeResponse.builder()
 			.memberUsernames(ret.members.stream().map(x -> x.user.username).collect(Collectors.toList()))
