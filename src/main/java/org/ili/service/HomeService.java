@@ -43,17 +43,29 @@ public class HomeService {
 	@Inject
 	AuthService authService;
 
+	public HomeResponse getById(UUID id) {
+		Home ret = HomeRepository.findByIdOptional(id).orElseThrow(() -> new NotFoundException(String.format(id.toString())));
+        List<Room> rooms = RoomRepository.findByHomeId(ret.id);
+
+		return HomeResponse.builder()
+			.memberUsernames(ret.members.stream().map(x -> x.user.username).collect(Collectors.toList()))
+			.name(ret.name)
+			.id(ret.id)
+			.rooms(rooms)
+			.build();
+	}
+
 	public List<HomeResponse> getMyHomes() {
 		User currentUser = authService.getCurrentUser();
-		List<HomeMember> memberships;
+		List<HomeMember> homeMembers;
 		try {
-			 memberships = homeMemberRepository.findByUserId(currentUser.id);
+			homeMembers = homeMemberRepository.findByUserId(currentUser.id);
 		}
 		catch (Exception e) {
-			throw new IllegalArgumentException("Error occurred while fetching home memberships", e);
+			throw new IllegalArgumentException("Error occurred while fetching home homeMembers", e);
 		}
 
-		return memberships.stream()
+		return homeMembers.stream()
 				.map(member -> {
 					Home home = member.home;
 					List<String> memberNames = home.members.stream()

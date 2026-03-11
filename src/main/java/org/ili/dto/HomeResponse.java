@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 import java.util.UUID;
 
+import org.ili.entity.Room;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,4 +19,5 @@ public class HomeResponse {
     private UUID id;
     private String name;
     private List<String> memberUsernames;
+	private List<Room> rooms;
 }

@@ -27,6 +27,12 @@ public class HomeController {
         return homeService.getMyHomes();
     }
 
+    @GET
+	@Path("/{id}")
+    public HomeResponse getHome(@PathParam("id") UUID homeId) {
+        return homeService.getById(homeId);
+    }
+
     @POST
     public Response createHome(CreateHomeRequest request) {
         HomeResponse home = homeService.createHome(request);
