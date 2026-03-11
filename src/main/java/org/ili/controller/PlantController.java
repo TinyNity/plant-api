@@ -4,6 +4,8 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
+import org.ili.dto.CareLogResponse;
 import org.ili.dto.CreateLogRequest;
 import org.ili.dto.CreatePlantRequest;
 import org.ili.dto.PlantResponse;
@@ -48,7 +50,14 @@ public class PlantController {
     @POST
     @Path("/{id}/logs")
     public Response addLog(@PathParam("id") UUID plantId, CreateLogRequest request) {
+        System.out.println("Received request to add log for plant " + plantId + ": " + request);
         plantService.addCareLog(plantId, request);
         return Response.status(Response.Status.CREATED).build();
+    }
+
+    @GET
+    @Path("/{id}/logs")
+    public List<CareLogResponse> getLogs(@PathParam("id") UUID plantId) {
+        return plantService.getCareLogs(plantId);
     }
 }

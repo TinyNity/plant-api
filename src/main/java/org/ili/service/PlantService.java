@@ -164,6 +164,26 @@ public class PlantService {
         }
     }
 
+    public List<CareLogResponse> getCareLogs(UUID plantId) {
+        Plant plant = plantRepository.findByIdOptional(plantId)
+                .orElseThrow(() -> new IllegalArgumentException("Plant not found"));
+
+        try {
+            authService.getUserPermission(plant);
+        } catch (IllegalArgumentException e) {
+            throw new ForbiddenException("Current user does not have access to this plant");
+        }
+
+        return careLogRepository.findByPlantId(plantId).stream()
+                .map(log -> CareLogResponse.builder()
+                        .id(log.id)
+                        .type(log.type)
+                        .note(log.note)
+                        .date(log.date)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
     private PlantResponse mapToPlantResponse(Plant plant) {
         return PlantResponse.builder()
                 .id(plant.id)
