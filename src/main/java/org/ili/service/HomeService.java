@@ -134,7 +134,7 @@ public class HomeService {
 				.id(new HomeMemberId(home.id, userToAdd.id))
 				.home(home)
 				.user(userToAdd)
-				.role(Role.MEMBER)
+				.role(request.getRole())
 				.build();
 
 		homeMemberRepository.persist(membership);

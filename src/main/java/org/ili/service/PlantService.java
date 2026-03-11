@@ -44,7 +44,7 @@ public class PlantService {
     @Transactional
     public PlantResponse createPlant(CreatePlantRequest request) {
         Room room = roomRepository.findByIdOptional(request.getRoomId())
-                .orElseThrow(() -> new NotFoundException("Room not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
 
         Role currentUserPermission;
         try {
@@ -101,7 +101,7 @@ public class PlantService {
         }
         if (request.getRoomId() != null) {
             Room room = roomRepository.findByIdOptional(request.getRoomId())
-                    .orElseThrow(() -> new NotFoundException("Room not found"));
+                    .orElseThrow(() -> new IllegalArgumentException("Room not found"));
             plant.room = room;
         }
 
@@ -111,7 +111,7 @@ public class PlantService {
 
     public PlantResponse getPlantById(UUID id) {
         Plant plant = plantRepository.findByIdOptional(id)
-                .orElseThrow(() -> new NotFoundException("Plant not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Plant not found"));
         try {
             authService.getUserPermission(plant);
         } catch (IllegalArgumentException e) {
@@ -137,7 +137,7 @@ public class PlantService {
     @Transactional
     public void addCareLog(UUID plantId, CreateLogRequest request) {
         Plant plant = plantRepository.findByIdOptional(plantId)
-                .orElseThrow(() -> new NotFoundException("Plant not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Plant not found"));
 
         try {
             authService.getUserPermission(plant);
