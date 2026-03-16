@@ -7,6 +7,7 @@ import jakarta.ws.rs.NotFoundException;
 import org.ili.dto.AddMemberRequest;
 import org.ili.dto.CreateHomeRequest;
 import org.ili.dto.CreateRoomRequest;
+import org.ili.dto.HomeMemberResponse;
 import org.ili.dto.HomeResponse;
 import org.ili.dto.RoomResponse;
 import org.ili.entity.Home;
@@ -116,9 +117,9 @@ public class HomeService {
 				.orElseThrow(() -> new NotFoundException("Home not found"));
 
 		Role currentUserPermission = authService.getUserPermission(home);
-		
 		if (currentUserPermission == Role.ADMIN) {
 			homeRepository.delete(home);
+			return;
 		}
 		throw new ForbiddenException("Current user does not have enough permission");
 	}
@@ -166,6 +167,19 @@ public class HomeService {
 		}
 
 		homeMemberRepository.delete(membership);
+	}
+
+	public List<HomeMemberResponse> getMembersByHomeId(UUID homeId) {
+		homeRepository.findByIdOptional(homeId)
+				.orElseThrow(() -> new NotFoundException("Home not found"));
+
+		return homeMemberRepository.findByHomeId(homeId).stream()
+				.map(member -> HomeMemberResponse.builder()
+						.username(member.user.username)
+						.role(member.role)
+						.userId(member.user.id)
+						.build())
+				.collect(Collectors.toList());
 	}
 
 	public List<RoomResponse> getRoomsByHomeId(UUID homeId) {

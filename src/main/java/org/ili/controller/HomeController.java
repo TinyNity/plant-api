@@ -46,11 +46,18 @@ public class HomeController {
         return Response.noContent().build();
     }
 
+
     @POST
     @Path("/{id}/members")
     public Response addMember(@PathParam("id") UUID homeId, AddMemberRequest request) {
         homeService.addMember(homeId, request);
         return Response.ok().build();
+    }
+
+    @GET
+    @Path("/{id}/members")
+    public List<HomeMemberResponse> getMembers(@PathParam("id") UUID homeId) {
+        return homeService.getMembersByHomeId(homeId);
     }
 
     @DELETE
