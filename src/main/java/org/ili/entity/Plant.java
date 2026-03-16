@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class Plant extends PanacheEntityBase {
 
     @Id
@@ -32,6 +34,16 @@ public class Plant extends PanacheEntityBase {
 
     @Column(name = "last_watered_date")
     public LocalDate lastWateredDate;
+
+    @Column(name = "photo_url")
+    public String photoUrl;
+
+    @Column(name = "potted_date")
+    public LocalDate pottedDate;
+
+    @Column(name = "is_deceased", nullable = false)
+    @Builder.Default
+    public Boolean deceased = false;
 
     @ManyToOne
     @JoinColumn(name = "room_id", nullable = false)

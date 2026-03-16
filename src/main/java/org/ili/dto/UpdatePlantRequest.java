@@ -16,5 +16,19 @@ public class UpdatePlantRequest {
     private String species;
     private Integer wateringFrequency;
     private LocalDate lastWateredDate;
+    private String photoUrl;
+    private LocalDate pottedDate;
+    private Boolean deceased;
     private UUID roomId;
+
+    public UpdatePlantRequest(String name, String species, Integer wateringFrequency, LocalDate lastWateredDate, UUID roomId) {
+        this.name = name;
+        this.species = species;
+        this.wateringFrequency = wateringFrequency;
+        this.lastWateredDate = lastWateredDate;
+        this.roomId = roomId;
+        this.photoUrl = null;
+        this.pottedDate = null;
+        this.deceased = null;
+    }
 }

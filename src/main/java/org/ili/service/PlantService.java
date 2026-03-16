@@ -1,16 +1,17 @@
 package org.ili.service;
 
+import io.quarkus.security.ForbiddenException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import org.ili.dto.*;
 import org.ili.entity.*;
 import org.ili.enumeration.Role;
 import org.ili.repository.*;
 
-import io.quarkus.security.ForbiddenException;
-
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -38,11 +39,17 @@ public class PlantService {
     UserRepository userRepository;
 
     @Inject
-	AuthService authService;
-
+    AuthService authService;
 
     @Transactional
     public PlantResponse createPlant(CreatePlantRequest request) {
+        if (request.getRoomId() == null) {
+            throw new BadRequestException("roomId is required");
+        }
+        if (request.getName() == null || request.getName().isBlank()) {
+            throw new BadRequestException("name is required");
+        }
+
         Room room = roomRepository.findByIdOptional(request.getRoomId())
                 .orElseThrow(() -> new IllegalArgumentException("Room not found"));
 
@@ -53,19 +60,22 @@ public class PlantService {
             throw new ForbiddenException("Current user does not have access to this home");
         }
 
-        if (currentUserPermission == Role.GUEST)
+        if (currentUserPermission == Role.GUEST) {
             throw new ForbiddenException("Current user does not have enough permission");
+        }
 
         Plant plant = Plant.builder()
                 .name(request.getName())
                 .species(request.getSpecies())
                 .wateringFrequency(request.getWateringFrequency())
                 .lastWateredDate(request.getLastWateredDate())
+                .photoUrl(request.getPhotoUrl())
+                .pottedDate(request.getPottedDate())
+                .deceased(request.getDeceased() != null ? request.getDeceased() : false)
                 .room(room)
                 .build();
 
         plantRepository.persist(plant);
-
         return mapToPlantResponse(plant);
     }
 
@@ -85,7 +95,7 @@ public class PlantService {
             plant.lastWateredDate = request.getLastWateredDate();
         }
 
-        if (currentUserPermission == Role.GUEST){
+        if (currentUserPermission == Role.GUEST) {
             plantRepository.persist(plant);
             return mapToPlantResponse(plant);
         }
@@ -99,14 +109,53 @@ public class PlantService {
         if (request.getWateringFrequency() != null) {
             plant.wateringFrequency = request.getWateringFrequency();
         }
+        if (request.getPhotoUrl() != null) {
+            plant.photoUrl = request.getPhotoUrl();
+        }
+        if (request.getPottedDate() != null) {
+            plant.pottedDate = request.getPottedDate();
+        }
+        if (request.getDeceased() != null) {
+            plant.deceased = request.getDeceased();
+        }
         if (request.getRoomId() != null) {
             Room room = roomRepository.findByIdOptional(request.getRoomId())
                     .orElseThrow(() -> new IllegalArgumentException("Room not found"));
+
+            try {
+                authService.getUserPermission(room);
+            } catch (IllegalArgumentException e) {
+                throw new ForbiddenException("Current user does not have access to target room");
+            }
+
             plant.room = room;
         }
 
         plantRepository.persist(plant);
         return mapToPlantResponse(plant);
+    }
+
+    @Transactional
+    public void deletePlant(UUID id) {
+        Plant plant = plantRepository.findByIdOptional(id)
+                .orElseThrow(() -> new NotFoundException("Plant not found"));
+
+        Role currentUserPermission;
+        try {
+            currentUserPermission = authService.getUserPermission(plant);
+        } catch (IllegalArgumentException e) {
+            throw new ForbiddenException("Current user does not have access to this plant");
+        }
+
+        if (currentUserPermission == Role.GUEST) {
+            throw new ForbiddenException("Current user does not have enough permission");
+        }
+
+        if (!Boolean.TRUE.equals(plant.deceased)) {
+            throw new BadRequestException("Plant can only be deleted if it is deceased");
+        }
+
+        plantRepository.delete(plant);
     }
 
     public PlantResponse getPlantById(UUID id) {
@@ -157,10 +206,9 @@ public class PlantService {
 
         careLogRepository.persist(log);
 
-        // Si c'est un arrosage, on met à jour la date de dernier arrosage de la plante
         if (request.getType() == CareLog.CareType.WATERING) {
             plant.lastWateredDate = log.date.toLocalDate();
-            plantRepository.persist(plant); // Update plant
+            plantRepository.persist(plant);
         }
     }
 
@@ -185,14 +233,39 @@ public class PlantService {
     }
 
     private PlantResponse mapToPlantResponse(Plant plant) {
+        LocalDate nextWateringDate = computeNextWateringDate(plant);
+        Boolean needsWatering = nextWateringDate != null && !nextWateringDate.isAfter(LocalDate.now());
+
         return PlantResponse.builder()
                 .id(plant.id)
                 .name(plant.name)
                 .species(plant.species)
                 .wateringFrequency(plant.wateringFrequency)
                 .lastWateredDate(plant.lastWateredDate)
+                .photoUrl(plant.photoUrl)
+                .pottedDate(plant.pottedDate)
+                .deceased(Boolean.TRUE.equals(plant.deceased))
+                .nextWateringDate(nextWateringDate)
+                .needsWatering(needsWatering)
                 .roomId(plant.room.id)
                 .roomName(plant.room.name)
+                .homeId(plant.room.home.id)
                 .build();
+    }
+
+    private LocalDate computeNextWateringDate(Plant plant) {
+        if (plant.wateringFrequency == null || plant.wateringFrequency <= 0) {
+            return null;
+        }
+
+        if (plant.lastWateredDate != null) {
+            return plant.lastWateredDate.plusDays(plant.wateringFrequency);
+        }
+
+        if (plant.pottedDate != null) {
+            return plant.pottedDate.plusDays(plant.wateringFrequency);
+        }
+
+        return null;
     }
 }

@@ -19,6 +19,16 @@ public class PlantResponse {
     private String species;
     private Integer wateringFrequency;
     private LocalDate lastWateredDate;
+
+    private String photoUrl;
+    private LocalDate pottedDate;
+    private Boolean deceased;
+
+    private LocalDate nextWateringDate;
+    private Boolean needsWatering;
+
     private UUID roomId;
     private String roomName;
+
+    private UUID homeId;
 }
