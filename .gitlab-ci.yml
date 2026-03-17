@@ -1,27 +1,5 @@
 stages:
-  - build
   - deploy
-
-variables:
-  IMAGE_TAG: $DOCKER_USER/plant-api:latest
-
-build:
-  stage: build
-  image:
-    name: registry.gitlab.com/gitlab-org/cluster-integration/auto-build-image:v1.40.0
-    entrypoint: [""]
-  tags:
-    - k8s-etu
-  script:
-    - mkdir -p /kaniko/.docker
-    - echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"username\":\"$DOCKER_USER\",\"password\":\"$DOCKER_PAT\"}}}" > /kaniko/.docker/config.json
-
-    - /kaniko/executor \
-        --context $CI_PROJECT_DIR \
-        --dockerfile $CI_PROJECT_DIR/Dockerfile \
-        --destination $IMAGE_TAG
-
-#! ----------------------------------
 
 deploy:
   stage: deploy
@@ -38,8 +16,8 @@ deploy:
 
   script:
     - |
-      ssh $SSH_USER@$SSH_HOST << 'EOF'
+      ssh $SSH_USER@$SSH_HOST << EOF
         cd /srv/plant/ProjetPlante
-        docker compose pull
-        docker compose up -d
+        git pull
+        docker compose up -d --build
       EOF
