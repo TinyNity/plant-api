@@ -1,6 +1,6 @@
 services:
   app:
-    image: tounu/plant-api:latest
+    build: .
     restart: unless-stopped
     environment:
       - QUARKUS_HTTP_HOST=0.0.0.0
