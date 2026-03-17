@@ -2,7 +2,9 @@ version: "3.9"
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: src/main/docker/Dockerfile.native
     container_name: plant-api
     restart: unless-stopped
     ports:
