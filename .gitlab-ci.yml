@@ -8,7 +8,7 @@ variables:
 build:
   stage: build
   image:
-    name: https://registry.gitlab.com/gitlab-org/cluster-integration/auto-build-image:v1.40.0
+    name: registry.gitlab.com/gitlab-org/cluster-integration/auto-build-image:v1.40.0
     entrypoint: [""]
   tags:
     - k8s-etu
