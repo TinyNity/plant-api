@@ -10,7 +10,7 @@ variables:
 build:
   stage: build
   image:
-    name: docker.io/kaniko-project/executor:latest
+    name: ghcr.io/kaniko-project/executor:latest
     entrypoint: [""]
   tags:
     - k8s-etu
