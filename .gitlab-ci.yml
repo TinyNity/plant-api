@@ -13,7 +13,7 @@ deploy:
     - echo "ssh $SSH_USER@$SSH_HOST"
     - echo "$CAN_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
     - chmod 600 ~/.ssh/id_ed25519
-    - echo "$(ssh-keyscan -p 2222 -H $SSH_HOST)"
+    - echo "$(ssh-keyscan -p 2222 -H $SSH_HOST 2&>1)"
     - ssh-keyscan -p 2222 -H $SSH_HOST >> ~/.ssh/known_hosts || echo "ssh-keyscan exploded for reasons that are yet to be discovered.. Fix your shit"
   script:
     - |
