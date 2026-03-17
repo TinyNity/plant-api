@@ -3,6 +3,8 @@ stages:
   - deploy
 
 variables:
+  CI_REGISTRY: gitlab.univ-artois.fr
+  CI_REGISTRY_IMAGE: $CI_REGISTRY/cameron_delsol/ProjetPlante
   IMAGE_TAG: $CI_REGISTRY_IMAGE:latest
 
 build:
