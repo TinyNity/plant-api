@@ -151,10 +151,6 @@ public class PlantService {
             throw new ForbiddenException("Current user does not have enough permission");
         }
 
-        if (!Boolean.TRUE.equals(plant.deceased)) {
-            throw new BadRequestException("Plant can only be deleted if it is deceased");
-        }
-
         plantRepository.delete(plant);
     }
 
