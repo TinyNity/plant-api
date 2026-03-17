@@ -43,7 +43,7 @@ public class DevDataSeederService {
     };
 
     private static final String[] PLANT_NAMES = {
-            "Monstera", "Ficus", "Pothos", "Calathea", "Aloe", "Yucca", "Philodendron", "Dracaena"
+            "Monstera", "Ficus", "Pothos", "Enculus", "Calathea", "Aloe", "Yucca", "Philodendron", "Dracaena"
     };
 
     private static final String[] PLANT_SPECIES = {
