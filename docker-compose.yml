@@ -1,6 +1,6 @@
 services:
   app:
-    image: gitlab.univ-artois.fr/cameron_delsol/projetplante:latest
+    image: tounu/plant-api:latest
     restart: unless-stopped
     environment:
       - QUARKUS_HTTP_HOST=0.0.0.0
