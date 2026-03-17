@@ -12,11 +12,11 @@ deploy:
     - mkdir -p ~/.ssh
     - echo "$CAN_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
     - chmod 600 ~/.ssh/id_ed25519
-    - ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+    - ssh-keyscan -p 2222 -H $SSH_HOST >> ~/.ssh/known_hosts
 
   script:
     - |
-      ssh $SSH_USER@$SSH_HOST << EOF
+      ssh -p 2222 $SSH_USER@$SSH_HOST << EOF
         cd /srv/plant/ProjetPlante
         git pull
         docker compose up -d --build
