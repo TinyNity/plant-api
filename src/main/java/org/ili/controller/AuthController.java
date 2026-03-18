@@ -90,6 +90,7 @@ public class AuthController {
 
 	@GET
 	@PermitAll
+    @Path("/test")
 	public Response test() {
 		AuthResponse resp = new AuthResponse();
 		resp.setAccessToken("Hi universe");
