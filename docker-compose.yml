@@ -1,5 +1,5 @@
 services:
-  app:
+  plant-api:
     image: ghcr.io/tounu/plant-api:latest
     restart: unless-stopped
     environment:
