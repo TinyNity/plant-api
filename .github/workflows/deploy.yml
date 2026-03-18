@@ -19,9 +19,9 @@ jobs:
       - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Build image
-        run: docker build --pull -t ghcr.io/${{ github.repository_owner }}/plant-api:latest .
+        run: docker build --pull -t ghcr.io/${{ github.repository_owner | toLowerCase }}/plant-api:latest .
       - name: Push image
-        run: docker push ghcr.io/${{ github.repository_owner }}/plant-api:latest
+        run: docker push ghcr.io/${{ github.repository_owner | toLowerCase }}/plant-api:latest
 
   deploy:
     name: Deploy to Server
