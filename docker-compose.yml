@@ -1,6 +1,6 @@
 services:
   plant-api:
-    image: ghcr.io/tounu/plant-api:latest
+    image: ghcr.io/tinynity/plant-api:latest
     restart: unless-stopped
     environment:
       - QUARKUS_HTTP_HOST=0.0.0.0
