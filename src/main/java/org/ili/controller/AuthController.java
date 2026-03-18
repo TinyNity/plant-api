@@ -93,7 +93,7 @@ public class AuthController {
 	public Response test() {
 		AuthResponse resp = new AuthResponse();
 		resp.setAccessToken("Hi universe");
-		return Response.Ok(resp).Build();
+		return Response.ok(resp).build();
 	}
 
     /**
