@@ -35,7 +35,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           port: ${{ secrets.SSH_PORT }}
-          host: ${{ secrets.SSH_HOST }}
+          host: nity.me
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.CAN_SSH_PRV_KEY }}
           script: |
