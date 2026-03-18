@@ -88,6 +88,14 @@ public class AuthController {
         return Response.ok(response).build();
     }
 
+	@GET
+	@PermitAll
+	public Response test() {
+		AuthResponse resp = new AuthResponse();
+		resp.setAccessToken("Hi universe");
+		return Response.Ok(resp).Build();
+	}
+
     /**
      * Refreshes an expired access token using a valid refresh token.
      * <p>
