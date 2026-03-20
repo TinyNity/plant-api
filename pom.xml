@@ -19,7 +19,7 @@
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.5.5</surefire-plugin.version>
         <spotbugs-maven-plugin.version>4.8.6.1</spotbugs-maven-plugin.version>
-        <checkstyle-maven-plugin.version>3.4.0</checkstyle-maven-plugin.version>
+        <checkstyle-maven-plugin.version>3.6.0</checkstyle-maven-plugin.version>
         <pmd-maven-plugin.version>3.24.0</pmd-maven-plugin.version>
     </properties>
 
