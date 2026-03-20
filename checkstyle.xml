@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+    Simplified Checkstyle configuration for Java code style validation
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="warning"/>
+
+    <!-- File-level checks -->
+    <module name="LineLength">
+        <property name="fileExtensions" value="java"/>
+        <property name="max" value="120"/>
+        <property name="ignorePattern" value="^package.*|^import.*|href=|http://|https://|ftp://"/>
+    </module>
+
+    <module name="NewlineAtEndOfFile"/>
+
+    <!-- TreeWalker checks -->
+    <module name="TreeWalker">
+        <!-- Imports -->
+        <module name="RedundantImport"/>
+        <module name="UnusedImports"/>
+
+        <!-- Blocks -->
+        <module name="AvoidNestedBlocks">
+            <property name="allowInSwitchCase" value="true"/>
+        </module>
+        <module name="EmptyBlock">
+            <property name="option" value="TEXT"/>
+            <property name="tokens" value="LITERAL_TRY, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE"/>
+        </module>
+        <module name="LeftCurly"/>
+        <module name="RightCurly"/>
+
+        <!-- Code quality -->
+        <module name="EqualsHashCode"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+        <module name="StringLiteralEquality"/>
+        <module name="NoFinalizer"/>
+        <module name="MultipleVariableDeclarations"/>
+
+        <!-- Naming conventions -->
+        <module name="ConstantName"/>
+        <module name="LocalFinalVariableName"/>
+        <module name="LocalVariableName"/>
+        <module name="MemberName"/>
+        <module name="MethodName"/>
+        <module name="PackageName"/>
+        <module name="ParameterName"/>
+        <module name="StaticVariableName"/>
+        <module name="TypeName"/>
+
+        <!-- Whitespace -->
+        <module name="EmptyForInitializerPad"/>
+        <module name="NoWhitespaceAfter">
+            <property name="tokens" value="INC, DEC, UNARY_MINUS, UNARY_PLUS, BNOT, LNOT"/>
+        </module>
+        <module name="NoWhitespaceBefore">
+            <property name="tokens" value="COMMA, SEMI, POST_INC, POST_DEC"/>
+        </module>
+        <module name="WhitespaceAfter">
+            <property name="tokens" value="COMMA, SEMI, TYPECAST"/>
+        </module>
+
+        <!-- Misc -->
+        <module name="ArrayTypeStyle"/>
+        <module name="UpperEll"/>
+        <module name="ModifierOrder"/>
+    </module>
+</module>
+

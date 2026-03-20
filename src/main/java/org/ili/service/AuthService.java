@@ -159,10 +159,8 @@ public class AuthService {
             refreshTokenRepository.delete(stored);
 
             return buildAndPersistTokenPair(user);
-        } catch (WebApplicationException e) {
-            throw e;
         } catch (Exception e) {
-            throw new WebApplicationException("Invalid refresh token", Response.Status.UNAUTHORIZED);
+            throw new WebApplicationException("Invalid refresh token", e, Response.Status.UNAUTHORIZED);
         }
     }
 
@@ -177,11 +175,7 @@ public class AuthService {
      */
     @Transactional
     public void logout(UUID userId) {
-        long deleted = refreshTokenRepository.deleteAllByUserId(userId);
-        if (deleted == 0) {
-            // The user may have already logged out or never had a refresh token persisted.
-            // This is not an error — we treat logout as idempotent.
-        }
+        refreshTokenRepository.deleteAllByUserId(userId);
     }
 
     /**
@@ -216,7 +210,7 @@ public class AuthService {
     public Role getUserPermission(Home home){
         UUID homeId = home.getId();
         UUID userId = getCurrentUserId();
-        return getUserPermission(homeId,userId);
+        return getUserPermission(homeId, userId);
     }
 
     // Retrieve the permission of current user based on the room

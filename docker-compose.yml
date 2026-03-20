@@ -11,8 +11,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    networks:
-      - web
+
 
   db:
     image: postgres:16
@@ -30,13 +29,9 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
-    networks:
-      - web
+
 
 volumes:
   postgres_data:
 
-networks:
-  web:
-    external: true
 

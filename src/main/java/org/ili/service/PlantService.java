@@ -6,6 +6,8 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 import org.ili.dto.*;
 import org.ili.entity.*;
 import org.ili.enumeration.Role;
@@ -57,7 +59,7 @@ public class PlantService {
         try {
             currentUserPermission = authService.getUserPermission(room);
         } catch (IllegalArgumentException e) {
-            throw new ForbiddenException("Current user does not have access to this home");
+            throw new WebApplicationException("Current user does not have access to this home", e, Response.Status.FORBIDDEN);
         }
 
         if (currentUserPermission == Role.GUEST) {
@@ -71,7 +73,7 @@ public class PlantService {
                 .lastWateredDate(request.getLastWateredDate())
                 .photoUrl(request.getPhotoUrl())
                 .pottedDate(request.getPottedDate())
-                .deceased(request.getDeceased() != null ? request.getDeceased() : false)
+                .deceased(Boolean.TRUE.equals(request.getDeceased()))
                 .room(room)
                 .build();
 
@@ -88,7 +90,7 @@ public class PlantService {
         try {
             currentUserPermission = authService.getUserPermission(plant);
         } catch (IllegalArgumentException e) {
-            throw new ForbiddenException("Current user does not have access to this plant");
+            throw new WebApplicationException("Current user does not have access to this plant", e, Response.Status.FORBIDDEN);
         }
 
         if (request.getLastWateredDate() != null) {
@@ -125,7 +127,7 @@ public class PlantService {
             try {
                 authService.getUserPermission(room);
             } catch (IllegalArgumentException e) {
-                throw new ForbiddenException("Current user does not have access to target room");
+                throw new WebApplicationException("Current user does not have access to target room", e, Response.Status.FORBIDDEN);
             }
 
             plant.room = room;
@@ -144,7 +146,7 @@ public class PlantService {
         try {
             currentUserPermission = authService.getUserPermission(plant);
         } catch (IllegalArgumentException e) {
-            throw new ForbiddenException("Current user does not have access to this plant");
+            throw new WebApplicationException("Current user does not have access to this plant", e, Response.Status.FORBIDDEN);
         }
 
         if (currentUserPermission == Role.GUEST) {
@@ -160,7 +162,7 @@ public class PlantService {
         try {
             authService.getUserPermission(plant);
         } catch (IllegalArgumentException e) {
-            throw new ForbiddenException("Current user does not have access to this plant");
+            throw new WebApplicationException("Current user does not have access to this plant", e, Response.Status.FORBIDDEN);
         }
         return mapToPlantResponse(plant);
     }
@@ -187,7 +189,7 @@ public class PlantService {
         try {
             authService.getUserPermission(plant);
         } catch (IllegalArgumentException e) {
-            throw new ForbiddenException("Current user does not have access to this plant");
+            throw new WebApplicationException("Current user does not have access to this plant", e, Response.Status.FORBIDDEN);
         }
 
         User currentUser = authService.getCurrentUser();
@@ -215,7 +217,7 @@ public class PlantService {
         try {
             authService.getUserPermission(plant);
         } catch (IllegalArgumentException e) {
-            throw new ForbiddenException("Current user does not have access to this plant");
+            throw new WebApplicationException("Current user does not have access to this plant", e, Response.Status.FORBIDDEN);
         }
 
         return careLogRepository.findByPlantId(plantId).stream()

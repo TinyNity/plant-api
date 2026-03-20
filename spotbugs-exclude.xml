@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Exclusions for SpotBugs analysis
+  Filters out specific bug patterns or packages that should not be analyzed
+-->
+<FindBugsFilter>
+    <!-- Exclude generated code -->
+    <Match>
+        <Package name="~.*generated.*"/>
+    </Match>
+
+    <!-- Exclude test code from analysis -->
+    <Match>
+        <Class name="~.*Test"/>
+    </Match>
+
+    <!-- Exclude Lombok generated code -->
+    <Match>
+        <Bug pattern="NP_UNWRITTEN_FIELD,NP_NULL_PARAM_DEREF"/>
+        <Class name="~.*\$Builder"/>
+    </Match>
+</FindBugsFilter>

@@ -27,8 +27,6 @@ public class CreatePlantRequest {
         this.wateringFrequency = wateringFrequency;
         this.lastWateredDate = lastWateredDate;
         this.roomId = roomId;
-        this.photoUrl = null;
-        this.pottedDate = null;
         this.deceased = false;
     }
 }

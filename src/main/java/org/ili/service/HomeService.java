@@ -61,8 +61,7 @@ public class HomeService {
 		List<HomeMember> homeMembers;
 		try {
 			homeMembers = homeMemberRepository.findByUserId(currentUser.id);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			throw new IllegalArgumentException("Error occurred while fetching home homeMembers", e);
 		}
 

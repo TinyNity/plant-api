@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+        "-//Checkstyle//DTD SuppressionXpathFilter Experimental Configuration 1.2//EN"
+        "https://checkstyle.org/dtds/suppressions_1_2_xpath_experimental.dtd">
+
+<!--
+  Suppressions for Checkstyle violations
+  Allows specific violations to be ignored in certain contexts
+-->
+<suppressions>
+    <!-- Exclude generated sources -->
+    <suppress checks="." files="[\\/]generated[\\/].*"/>
+    <suppress checks="." files="[\\/]target[\\/].*"/>
+
+    <!-- Allow longer lines in imports and specific contexts -->
+    <suppress checks="LineLength" files=".*"/>
+
+    <!-- Allow field naming in entity classes (often use DB column names) -->
+    <suppress checks="AbbreviationAsWordInName" files="[\\/]entity[\\/].*"/>
+
+    <!-- Suppress Javadoc requirements for test classes -->
+    <suppress checks="JavadocMethod" files=".*Test\.java"/>
+    <suppress checks="JavadocType" files=".*Test\.java"/>
+    <suppress checks="JavadocVariable" files=".*Test\.java"/>
+
+    <!-- Suppress empty block checks in catch blocks for unused exceptions -->
+    <suppress checks="EmptyBlock" files=".*" id="EmptyBlock"/>
+
+    <!-- Allow avoidInlineConditionals in specific cases -->
+    <suppress checks="AvoidInlineConditionals" files=".*"/>
+</suppressions>

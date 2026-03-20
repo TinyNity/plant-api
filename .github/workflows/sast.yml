@@ -1,0 +1,82 @@
+name: CI - Tests and SAST Analysis
+
+on:
+  push:
+    branches: [ "master", "feature/**" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  ci:
+    name: Tests & SAST Analysis
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      checks: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run tests and SAST analysis
+        run: ./mvnw clean verify
+        continue-on-error: false
+
+      - name: Upload SpotBugs report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotbugs-report
+          path: target/spotbugsXml.xml
+          retention-days: 30
+
+      - name: Upload Checkstyle report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkstyle-report
+          path: target/checkstyle-result.xml
+          retention-days: 30
+
+      - name: Upload PMD report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pmd-report
+          path: target/pmd.xml
+          retention-days: 30
+
+      - name: Check SpotBugs critical/high severity issues
+        if: always()
+        run: |
+          if [ -f target/spotbugsXml.xml ]; then
+            # Count HIGH priority bugs
+            HIGH_BUGS=$(grep -c 'priority="1"' target/spotbugsXml.xml || echo 0)
+            # Count CRITICAL priority bugs (highest priority)
+            CRITICAL_BUGS=$(grep -c 'priority="1"\|priority="2"' target/spotbugsXml.xml || echo 0)
+            
+            if [ "$CRITICAL_BUGS" -gt 0 ]; then
+              echo "❌ Found $CRITICAL_BUGS critical/high severity SpotBugs issues!"
+              echo "Please fix these issues before merging."
+              exit 1
+            else
+              echo "✅ No critical/high severity SpotBugs issues found"
+            fi
+          else
+            echo "⚠️ SpotBugs report not found"
+          fi
+
+      - name: Publish test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: target/surefire-reports/*.xml
+          check_name: Test Results

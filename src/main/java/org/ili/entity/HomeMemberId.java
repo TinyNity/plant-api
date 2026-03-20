@@ -14,6 +14,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class HomeMemberId implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private UUID homeId;
     private UUID userId;
 }

@@ -1,5 +1,6 @@
 package org.ili.controller;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -14,6 +15,7 @@ import java.util.UUID;
 @Path("/api/v1/homes")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@RolesAllowed({"MEMBER", "ADMIN"})
 public class HomeController {
 
     @Inject
