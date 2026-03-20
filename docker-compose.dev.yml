@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  app:
+  plant-api:
     ports:
       - "8080:8080"
     environment:
