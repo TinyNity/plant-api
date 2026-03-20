@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    target-branch: "master"
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "dependencies"
+      - "security"
