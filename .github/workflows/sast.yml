@@ -26,7 +26,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Run tests and SAST analysis
+      - name: Run SAST analysis
         run: ./mvnw clean verify -DskipTests
         continue-on-error: false
 
@@ -74,9 +74,3 @@ jobs:
             echo "⚠️ SpotBugs report not found"
           fi
 
-      - name: Publish test results
-        if: always()
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          files: target/surefire-reports/*.xml
-          check_name: Test Results
