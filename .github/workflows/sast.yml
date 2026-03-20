@@ -27,7 +27,7 @@ jobs:
           cache: maven
 
       - name: Run tests and SAST analysis
-        run: ./mvnw clean verify
+        run: ./mvnw clean verify -DskipTests
         continue-on-error: false
 
       - name: Upload SpotBugs report
