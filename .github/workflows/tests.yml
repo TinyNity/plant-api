@@ -31,8 +31,16 @@ jobs:
           openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out src/main/resources/privateKey.pem
           openssl rsa -pubout -in src/main/resources/privateKey.pem -out src/main/resources/publicKey.pem
 
-      - name: Run tests
+      - name: Run tests and generate coverage report
         shell: bash
         run: |
           chmod +x mvnw
-          ./mvnw test
+          ./mvnw verify
+
+      - name: Upload JaCoCo coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco
+          retention-days: 30
