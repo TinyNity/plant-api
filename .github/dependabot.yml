@@ -7,7 +7,7 @@ updates:
       day: "monday"
       time: "03:00"
       timezone: "UTC"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     target-branch: "master"
     commit-message:
       prefix: "deps"
