@@ -10,6 +10,7 @@ public class PostgresTestResource implements QuarkusTestResourceLifecycleManager
 
     private PostgreSQLContainer<?> postgres;
 
+    @SuppressWarnings("resource")
     @Override
     public Map<String, String> start() {
         postgres = new PostgreSQLContainer<>("postgres:16")
