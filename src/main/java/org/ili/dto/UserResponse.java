@@ -18,7 +18,6 @@ public class UserResponse {
     private UUID id;
     private String username;
     private String email;
-    private String password;
 
     public static UserResponse from(User user) {
         UserResponse res = new UserResponse();

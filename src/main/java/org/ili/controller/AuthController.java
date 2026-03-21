@@ -23,6 +23,10 @@ import org.ili.dto.RegisterRequest;
 import org.ili.dto.UserResponse;
 import org.ili.entity.User;
 import org.ili.service.AuthService;
+import jakarta.ws.rs.PUT;
+import org.ili.dto.UpdateEmailRequest;
+import org.ili.dto.UpdatePasswordRequest;
+import org.ili.dto.UpdateUsernameRequest;
 
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -152,4 +156,44 @@ public class AuthController {
         UserResponse response = UserResponse.from(user);
         return Response.ok(response).build();
     }
+
+    @PUT
+    @Path("/me/username")
+    @RolesAllowed({"MEMBER", "ADMIN"})
+    @Operation(summary = "Update username", description = "Updates the username of the authenticated user")
+    @APIResponse(responseCode = "200", description = "Username updated successfully",
+            content = @Content(schema = @Schema(implementation = UserResponse.class)))
+    @APIResponse(responseCode = "401", description = "Not authenticated")
+    @APIResponse(responseCode = "409", description = "Username already exists")
+    public Response updateUsername(@Valid UpdateUsernameRequest request) {
+        User user = authService.updateUsername(request);
+        UserResponse response = UserResponse.from(user);
+        return Response.ok(response).build();
+    }
+    
+    @PUT
+    @Path("/me/email")
+    @RolesAllowed({"MEMBER", "ADMIN"})
+    @Operation(summary = "Update email", description = "Updates the email of the authenticated user after password confirmation")
+    @APIResponse(responseCode = "200", description = "Email updated successfully",
+            content = @Content(schema = @Schema(implementation = UserResponse.class)))
+    @APIResponse(responseCode = "401", description = "Current password is incorrect or not authenticated")
+    @APIResponse(responseCode = "409", description = "Email already exists")
+    public Response updateEmail(@Valid UpdateEmailRequest request) {
+        User user = authService.updateEmail(request);
+        UserResponse response = UserResponse.from(user);
+        return Response.ok(response).build();
+    }
+    
+    @PUT
+    @Path("/me/password")
+    @RolesAllowed({"MEMBER", "ADMIN"})
+    @Operation(summary = "Update password", description = "Updates the password of the authenticated user after verifying the current password")
+    @APIResponse(responseCode = "204", description = "Password updated successfully")
+    @APIResponse(responseCode = "401", description = "Current password is incorrect or not authenticated")
+    @APIResponse(responseCode = "400", description = "New password is invalid")
+    public Response updatePassword(@Valid UpdatePasswordRequest request) {
+        authService.updatePassword(request);
+        return Response.noContent().build();
+    }    
 }

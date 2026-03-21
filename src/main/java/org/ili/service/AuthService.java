@@ -25,6 +25,9 @@ import org.ili.enumeration.Role;
 import org.ili.repository.HomeMemberRepository;
 import org.ili.repository.RefreshTokenRepository;
 import org.ili.repository.UserRepository;
+import org.ili.dto.UpdateEmailRequest;
+import org.ili.dto.UpdatePasswordRequest;
+import org.ili.dto.UpdateUsernameRequest;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -195,7 +198,56 @@ public class AuthService {
         return UUID.fromString(jwt.getSubject());
     }
 
-
+    @Transactional
+    public User updateUsername(UpdateUsernameRequest request) {
+        User user = getCurrentUser();
+    
+        String newUsername = request.username.trim();
+    
+        userRepository.findByUsername(newUsername).ifPresent(existingUser -> {
+            if (!existingUser.id.equals(user.id)) {
+                throw new WebApplicationException("Username already exists", Response.Status.CONFLICT);
+            }
+        });
+    
+        user.username = newUsername;
+        return user;
+    }
+    
+    @Transactional
+    public User updateEmail(UpdateEmailRequest request) {
+        User user = getCurrentUser();
+    
+        if (!BcryptUtil.matches(request.currentPassword, user.password)) {
+            throw new WebApplicationException("Current password is incorrect", Response.Status.UNAUTHORIZED);
+        }
+    
+        String newEmail = request.email.trim().toLowerCase();
+    
+        userRepository.findByEmail(newEmail).ifPresent(existingUser -> {
+            if (!existingUser.id.equals(user.id)) {
+                throw new WebApplicationException("Email already exists", Response.Status.CONFLICT);
+            }
+        });
+    
+        user.email = newEmail;
+        return user;
+    }
+    
+    @Transactional
+    public void updatePassword(UpdatePasswordRequest request) {
+        User user = getCurrentUser();
+    
+        if (!BcryptUtil.matches(request.currentPassword, user.password)) {
+            throw new WebApplicationException("Current password is incorrect", Response.Status.UNAUTHORIZED);
+        }
+    
+        if (BcryptUtil.matches(request.newPassword, user.password)) {
+            throw new WebApplicationException("New password must be different from current password", Response.Status.BAD_REQUEST);
+        }
+    
+        user.password = BcryptUtil.bcryptHash(request.newPassword);
+    }
     
     // Retrieve the permission of current user based on his user id 
     // and the home id
