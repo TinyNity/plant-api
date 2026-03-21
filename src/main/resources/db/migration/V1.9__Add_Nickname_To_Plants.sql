@@ -1,0 +1,1 @@
+ALTER TABLE plants ADD COLUMN nickname VARCHAR(255);

@@ -69,6 +69,7 @@ public class PlantService {
         Plant plant = Plant.builder()
                 .name(request.getName())
                 .species(request.getSpecies())
+                .nickname(request.getNickname())
                 .wateringFrequency(request.getWateringFrequency())
                 .lastWateredDate(request.getLastWateredDate())
                 .photoUrl(request.getPhotoUrl())
@@ -107,6 +108,9 @@ public class PlantService {
         }
         if (request.getSpecies() != null) {
             plant.species = request.getSpecies();
+        }
+        if (request.getNickname() != null) {
+            plant.nickname = request.getNickname();
         }
         if (request.getWateringFrequency() != null) {
             plant.wateringFrequency = request.getWateringFrequency();
@@ -238,6 +242,7 @@ public class PlantService {
                 .id(plant.id)
                 .name(plant.name)
                 .species(plant.species)
+                .nickname(plant.nickname)
                 .wateringFrequency(plant.wateringFrequency)
                 .lastWateredDate(plant.lastWateredDate)
                 .photoUrl(plant.photoUrl)

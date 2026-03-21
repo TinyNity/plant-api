@@ -16,6 +16,7 @@ public class PlantResponse {
 
     private UUID id;
     private String name;
+    private String nickname;
     private String species;
     private Integer wateringFrequency;
     private LocalDate lastWateredDate;

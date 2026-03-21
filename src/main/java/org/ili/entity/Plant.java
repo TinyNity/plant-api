@@ -27,6 +27,8 @@ public class Plant extends PanacheEntityBase {
     @Column(nullable = false)
     public String name;
 
+    public String nickname;
+
     public String species;
 
     @Column(name = "watering_frequency")

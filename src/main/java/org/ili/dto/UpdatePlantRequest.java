@@ -14,6 +14,7 @@ public class UpdatePlantRequest {
 
     private String name;
     private String species;
+    private String nickname;
     private Integer wateringFrequency;
     private LocalDate lastWateredDate;
     private String photoUrl;
