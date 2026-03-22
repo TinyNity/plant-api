@@ -1,0 +1,29 @@
+replicaCount: 1
+
+image:
+  repository: plant-api
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+app:
+  profile: prod
+  port: 8080
+
+database:
+  host: plant-db-postgresql
+  port: 5432
+  name: plante_db
+  username: my_user
+  password: my_super_password
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
