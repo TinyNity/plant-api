@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 import org.ili.entity.User;
+/**
+ * API response payload describing a user.
+ */
 
 @Data
 @NoArgsConstructor
@@ -19,6 +22,12 @@ public class UserResponse {
     private String username;
     private String email;
 
+    /**
+     * Maps a {@link User} entity to {@link UserResponse}.
+     *
+     * @param user entity to convert.
+     * @return mapped response object.
+     */
     public static UserResponse from(User user) {
         UserResponse res = new UserResponse();
         res.id = user.id;
@@ -27,3 +36,4 @@ public class UserResponse {
         return res;
     }
 }
+

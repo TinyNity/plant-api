@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+/**
+ * Data transfer object for DevSeedRequest payloads.
+ */
 
 @Data
 @NoArgsConstructor
@@ -19,3 +22,5 @@ public class DevSeedRequest {
     private Integer logsPerPlant;
     private Boolean replaceExisting;
 }
+
+

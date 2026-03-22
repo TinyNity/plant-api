@@ -10,6 +10,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.ili.dto.dev.DevSeedRequest;
 import org.ili.service.dev.DevDataSeederService;
+/**
+ * Development-only endpoint used to seed local demo/test data.
+ */
 
 @Path("/api/v1/dev/seed")
 @IfBuildProfile("dev")
@@ -20,8 +23,15 @@ public class DevDataController {
     @Inject
     DevDataSeederService devDataSeederService;
 
+    /**
+     * Seeds development data according to the requested plan.
+     *
+     * @param request seeding options and counters.
+     * @return the seeding execution report.
+     */
     @POST
     public Response seed(DevSeedRequest request) {
         return Response.ok(devDataSeederService.seed(request)).build();
     }
 }
+

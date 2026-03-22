@@ -34,6 +34,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+/**
+ * Seeds development data for local environments.
+ */
 
 @ApplicationScoped
 public class DevDataSeederService {
@@ -93,6 +96,12 @@ public class DevDataSeederService {
     @ConfigProperty(name = "plante.dev-seeder.default-user-password", defaultValue = "Password123!")
     String defaultUserPassword;
 
+    /**
+     * Generates a full dataset (users, homes, rooms, plants and care logs).
+     *
+     * @param request optional seeding request overriding defaults.
+     * @return summary of created records and sample credentials.
+     */
     @Transactional
     public DevSeedResponse seed(DevSeedRequest request) {
         SeedPlan plan = SeedPlan.from(request, defaultUserCount, defaultHomesPerUser, defaultAdditionalMembersPerHome,
@@ -159,6 +168,9 @@ public class DevDataSeederService {
                 .build();
     }
 
+    /**
+     * Creates users and stores the first credentials as sample output.
+     */
     private List<User> createUsers(int userCount, Faker faker, Set<String> usernames, Set<String> emails,
             List<SeededUserCredential> sampleUsers) {
         List<User> users = new ArrayList<>(userCount);
@@ -184,6 +196,9 @@ public class DevDataSeederService {
         return users;
     }
 
+    /**
+     * Creates the owner membership for a newly created home.
+     */
     private int createOwnerMembership(Home home, User owner) {
         HomeMember membership = HomeMember.builder()
                 .id(new HomeMemberId(home.id, owner.id))
@@ -195,6 +210,9 @@ public class DevDataSeederService {
         return 1;
     }
 
+    /**
+     * Adds additional members to a home from available users.
+     */
     private int addAdditionalMembers(Home home, User owner, List<User> users, List<User> homeUsers, int additionalMembers) {
         List<User> candidates = new ArrayList<>(users);
         candidates.removeIf(candidate -> candidate.id.equals(owner.id));
@@ -215,6 +233,9 @@ public class DevDataSeederService {
         return membersToAdd;
     }
 
+    /**
+     * Builds a randomized plant assigned to a room.
+     */
     private Plant buildPlant(Faker faker, Room room, int plantIndex) {
         int speciesIndex = ThreadLocalRandom.current().nextInt(PLANT_SPECIES.length);
         int wateringFrequency = ThreadLocalRandom.current().nextInt(2, 22);
@@ -229,6 +250,9 @@ public class DevDataSeederService {
                 .build();
     }
 
+    /**
+     * Creates random care logs for one plant and updates last watering date.
+     */
     private int createCareLogs(Faker faker, Plant plant, List<User> homeUsers, int logsPerPlant) {
         LocalDate latestWateringDate = plant.lastWateredDate;
 
@@ -258,6 +282,9 @@ public class DevDataSeederService {
         return logsPerPlant;
     }
 
+    /**
+     * Removes all persisted data in dependency order.
+     */
     private void clearExistingData() {
         careLogRepository.deleteAll();
         refreshTokenRepository.deleteAll();
@@ -268,14 +295,23 @@ public class DevDataSeederService {
         userRepository.deleteAll();
     }
 
+    /**
+     * Generates a display name for a seeded home.
+     */
     private String buildHomeName(Faker faker, int homeIndex) {
         return "Maison " + faker.color().name() + " " + (homeIndex + 1);
     }
 
+    /**
+     * Generates a display name for a seeded room.
+     */
     private String buildRoomName(Faker faker, int roomIndex) {
         return ROOM_NAMES[roomIndex % ROOM_NAMES.length] + " " + faker.number().digit();
     }
 
+    /**
+     * Generates a readable note matching the care log type.
+     */
     private String buildCareNote(Faker faker, CareLog.CareType type) {
         return switch (type) {
             case WATERING -> "Arrosage: " + faker.lorem().sentence(4);
@@ -286,11 +322,17 @@ public class DevDataSeederService {
         };
     }
 
+    /**
+     * Picks a random care type.
+     */
     private CareLog.CareType randomCareType() {
         CareLog.CareType[] values = CareLog.CareType.values();
         return values[ThreadLocalRandom.current().nextInt(values.length)];
     }
 
+    /**
+     * Generates a unique username not already persisted.
+     */
     private String nextUniqueUsername(Faker faker, Set<String> usernames) {
         while (true) {
             String candidate = sanitize(faker.name().firstName()) + "_" + sanitize(faker.name().lastName())
@@ -302,6 +344,9 @@ public class DevDataSeederService {
         }
     }
 
+    /**
+     * Generates a unique email not already persisted.
+     */
     private String nextUniqueEmail(Faker faker, Set<String> emails, String username) {
         while (true) {
             String candidate = username + "." + sanitize(faker.number().digits(4)) + "@example.test";
@@ -311,13 +356,22 @@ public class DevDataSeederService {
         }
     }
 
+    /**
+     * Removes non alphanumeric characters from generated text.
+     */
     private String sanitize(String value) {
         return value == null ? "user" : value.replaceAll("[^A-Za-z0-9]", "");
     }
 
+    /**
+     * Immutable seeding plan derived from request and defaults.
+     */
     private record SeedPlan(int userCount, int homesPerUser, int additionalMembersPerHome, int roomsPerHome,
                             int plantsPerRoom, int logsPerPlant, boolean replaceExisting) {
 
+        /**
+         * Builds a normalized plan from an optional request.
+         */
         private static SeedPlan from(DevSeedRequest request, int defaultUserCount, int defaultHomesPerUser,
                 int defaultAdditionalMembersPerHome, int defaultRoomsPerHome, int defaultPlantsPerRoom,
                 int defaultLogsPerPlant) {
@@ -333,12 +387,19 @@ public class DevDataSeederService {
             );
         }
 
+        /**
+         * Returns a strictly positive value, or fallback when null.
+         */
         private static int positiveOrDefault(Integer requested, int fallback) {
             return requested == null ? fallback : Math.max(1, requested);
         }
 
+        /**
+         * Returns a non-negative value, or fallback when null.
+         */
         private static int nonNegativeOrDefault(Integer requested, int fallback) {
             return requested == null ? fallback : Math.max(0, requested);
         }
     }
 }
+

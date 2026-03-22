@@ -22,14 +22,48 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
-      - name: Lowercase owner name
-        run: echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "maven"
+
+      - name: Generate Javadoc
+        run: |
+          chmod +x mvnw
+          ./mvnw javadoc:javadoc -DskipTests
+
+      - name: Generate OpenAPI specification
+        run: |
+          ./mvnw package -DskipTests -Dquarkus.smallrye-openapi.store-schema-directory=target/openapi
+          mkdir -p openapi-specs
+          find target -type f \( -name "openapi.yaml" -o -name "openapi.json" \) -exec cp {} openapi-specs/ \;
+          test -n "$(ls -A openapi-specs)"
+
+      - name: Upload Javadoc artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: javadoc-report
+          path: target/reports/apidocs
+          retention-days: 30
+
+      - name: Upload OpenAPI artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: openapi-specs
+          retention-days: 30
+
       - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Build image
-        run: docker build --pull -t ghcr.io/${{ env.OWNER }}/plant-api:latest .
+        run: docker build --pull -t ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/plant-api:latest .
       - name: Push image
-        run: docker push ghcr.io/${{ env.OWNER }}/plant-api:latest
+        run: docker push ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/plant-api:latest
 
   deploy:
     name: Deploy to Server

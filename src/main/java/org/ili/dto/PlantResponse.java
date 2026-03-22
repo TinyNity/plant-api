@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.UUID;
+/**
+ * Data transfer object for PlantResponse payloads.
+ */
 
 @Data
 @NoArgsConstructor
@@ -33,3 +36,5 @@ public class PlantResponse {
 
     private UUID homeId;
 }
+
+

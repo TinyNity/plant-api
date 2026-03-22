@@ -13,7 +13,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.ili.dto.AuthResponse;
 import org.ili.dto.LoginRequest;
 import org.ili.dto.RegisterRequest;
-import org.ili.dto.UserResponse;
 import org.ili.entity.Home;
 import org.ili.entity.HomeMember;
 import org.ili.entity.HomeMemberId;
@@ -182,22 +181,31 @@ public class AuthService {
     }
 
     /**
-     * Gets public profile information for a user.
+     * Resolves the currently authenticated user entity from JWT subject.
      *
-     * @param userId the ID of the user.
-     * @return {@link UserResponse} dto containing public user information.
-     * @throws WebApplicationException with HTTP 404 Not Found if the user
-     * doesn't exist.
-    */
+     * @return current authenticated user.
+     * @throws UnauthorizedException if subject does not match an existing user.
+     */
     public User getCurrentUser() {
         return userRepository.findByIdOptional(getCurrentUserId())
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
     }
 
+    /**
+     * Extracts the authenticated user identifier from the JWT subject claim.
+     *
+     * @return current user identifier.
+     */
     public UUID getCurrentUserId() {
         return UUID.fromString(jwt.getSubject());
     }
 
+    /**
+     * Updates username for the current user after uniqueness checks.
+     *
+     * @param request payload containing the new username.
+     * @return the updated user entity.
+     */
     @Transactional
     public User updateUsername(UpdateUsernameRequest request) {
         User user = getCurrentUser();
@@ -214,6 +222,13 @@ public class AuthService {
         return user;
     }
     
+    /**
+     * Updates email for the current user after password confirmation and
+     * uniqueness checks.
+     *
+     * @param request payload containing current password and new email.
+     * @return the updated user entity.
+     */
     @Transactional
     public User updateEmail(UpdateEmailRequest request) {
         User user = getCurrentUser();
@@ -234,6 +249,11 @@ public class AuthService {
         return user;
     }
     
+    /**
+     * Changes password for the current user.
+     *
+     * @param request payload containing current and new passwords.
+     */
     @Transactional
     public void updatePassword(UpdatePasswordRequest request) {
         User user = getCurrentUser();
@@ -249,8 +269,13 @@ public class AuthService {
         user.password = BcryptUtil.bcryptHash(request.newPassword);
     }
     
-    // Retrieve the permission of current user based on his user id 
-    // and the home id
+    /**
+     * Returns the role of a user within a home.
+     *
+     * @param homeId home identifier.
+     * @param userId user identifier.
+     * @return user role in the home.
+     */
     public Role getUserPermission(UUID homeId, UUID userId) {
         HomeMemberId id = new HomeMemberId(homeId, userId);
 		HomeMember membership = homeMemberRepository.findByIdOptional(id)
@@ -258,21 +283,36 @@ public class AuthService {
 		return membership.role;
 	}
     
-    // Retrieve the permission of current user based on the home
+    /**
+     * Returns current user role for a given home.
+     *
+     * @param home home entity.
+     * @return current user role.
+     */
     public Role getUserPermission(Home home){
         UUID homeId = home.getId();
         UUID userId = getCurrentUserId();
         return getUserPermission(homeId, userId);
     }
 
-    // Retrieve the permission of current user based on the room
+	/**
+	 * Returns current user role for the home containing a room.
+	 *
+	 * @param room room entity.
+	 * @return current user role.
+	 */
 	public Role getUserPermission(Room room) {
         UUID homeId = room.getHome().getId();
         UUID userId = getCurrentUser().getId();
 		return getUserPermission(homeId, userId);
 	}
 
-    // Retrieve the permission of current user based on the plant
+    /**
+     * Returns current user role for the home containing a plant.
+     *
+     * @param plant plant entity.
+     * @return current user role.
+     */
     public Role getUserPermission(Plant plant){
         Room room = plant.getRoom();
         return getUserPermission(room);

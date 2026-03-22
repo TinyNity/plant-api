@@ -5,7 +5,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.ili.entity.Home;
 
 import java.util.UUID;
+/**
+ * Repository for {@link Home} persistence operations.
+ */
 
 @ApplicationScoped
 public class HomeRepository implements PanacheRepositoryBase<Home, UUID> {
 }
+

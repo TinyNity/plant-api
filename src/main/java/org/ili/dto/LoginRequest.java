@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
+/**
+ * Data transfer object for LoginRequest payloads.
+ */
 
 @Data
 @NoArgsConstructor
@@ -17,3 +20,5 @@ public class LoginRequest {
     @NotBlank
     private String password;
 }
+
+

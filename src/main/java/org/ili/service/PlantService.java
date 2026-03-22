@@ -18,6 +18,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+/**
+ * Service handling plant lifecycle and plant care log operations.
+ */
 
 @ApplicationScoped
 public class PlantService {
@@ -43,6 +46,12 @@ public class PlantService {
     @Inject
     AuthService authService;
 
+    /**
+     * Creates a new plant after validating payload and user permissions.
+     *
+     * @param request plant creation payload.
+     * @return the created plant response.
+     */
     @Transactional
     public PlantResponse createPlant(CreatePlantRequest request) {
         if (request.getRoomId() == null) {
@@ -82,6 +91,16 @@ public class PlantService {
         return mapToPlantResponse(plant);
     }
 
+    /**
+     * Updates an existing plant.
+     * <p>
+     * Guest users can only update watering date while members/admins can
+     * update additional fields.
+     *
+     * @param id the plant identifier.
+     * @param request payload with fields to update.
+     * @return the updated plant response.
+     */
     @Transactional
     public PlantResponse updatePlant(UUID id, UpdatePlantRequest request) {
         Plant plant = plantRepository.findByIdOptional(id)
@@ -141,6 +160,11 @@ public class PlantService {
         return mapToPlantResponse(plant);
     }
 
+    /**
+     * Deletes a plant if the current user has sufficient permissions.
+     *
+     * @param id the plant identifier.
+     */
     @Transactional
     public void deletePlant(UUID id) {
         Plant plant = plantRepository.findByIdOptional(id)
@@ -160,6 +184,12 @@ public class PlantService {
         plantRepository.delete(plant);
     }
 
+    /**
+     * Retrieves one plant by ID and validates current user access.
+     *
+     * @param id the plant identifier.
+     * @return the mapped plant response.
+     */
     public PlantResponse getPlantById(UUID id) {
         Plant plant = plantRepository.findByIdOptional(id)
                 .orElseThrow(() -> new IllegalArgumentException("Plant not found"));
@@ -171,6 +201,11 @@ public class PlantService {
         return mapToPlantResponse(plant);
     }
 
+    /**
+     * Lists all plants accessible by the current user.
+     *
+     * @return accessible plants.
+     */
     public List<PlantResponse> getAllPlants() {
         return plantRepository.listAll().stream()
                 .filter(plant -> {
@@ -185,6 +220,14 @@ public class PlantService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Adds a care log to a plant.
+     * <p>
+     * If the log type is watering, the plant's last watered date is updated.
+     *
+     * @param plantId the plant identifier.
+     * @param request care log payload.
+     */
     @Transactional
     public void addCareLog(UUID plantId, CreateLogRequest request) {
         Plant plant = plantRepository.findByIdOptional(plantId)
@@ -214,6 +257,12 @@ public class PlantService {
         }
     }
 
+    /**
+     * Lists care logs for a plant accessible by the current user.
+     *
+     * @param plantId the plant identifier.
+     * @return plant care logs.
+     */
     public List<CareLogResponse> getCareLogs(UUID plantId) {
         Plant plant = plantRepository.findByIdOptional(plantId)
                 .orElseThrow(() -> new IllegalArgumentException("Plant not found"));
@@ -234,6 +283,12 @@ public class PlantService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Maps a {@link Plant} entity to API response format.
+     *
+     * @param plant plant entity to map.
+     * @return mapped response.
+     */
     private PlantResponse mapToPlantResponse(Plant plant) {
         LocalDate nextWateringDate = computeNextWateringDate(plant);
         Boolean needsWatering = nextWateringDate != null && !nextWateringDate.isAfter(LocalDate.now());
@@ -256,6 +311,12 @@ public class PlantService {
                 .build();
     }
 
+    /**
+     * Computes the next watering date based on the plant history.
+     *
+     * @param plant plant entity.
+     * @return next watering date or {@code null} when unknown.
+     */
     private LocalDate computeNextWateringDate(Plant plant) {
         if (plant.wateringFrequency == null || plant.wateringFrequency <= 0) {
             return null;
@@ -272,3 +333,4 @@ public class PlantService {
         return null;
     }
 }
+
