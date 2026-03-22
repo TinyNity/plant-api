@@ -1,4 +1,4 @@
-name: CI - Tests and SAST Analysis
+name: CI - SAST Analysis
 
 on:
   push:

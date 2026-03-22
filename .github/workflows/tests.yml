@@ -36,6 +36,7 @@ jobs:
         run: |
           chmod +x mvnw
           ./mvnw verify
+        continue-on-error: false
 
       - name: Upload JaCoCo coverage report
         if: always()
