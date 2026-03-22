@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.UUID;
+/**
+ * Data transfer object for UpdatePlantRequest payloads.
+ */
 
 @Data
 @NoArgsConstructor
@@ -30,3 +33,5 @@ public class UpdatePlantRequest {
         this.roomId = roomId;
     }
 }
+
+

@@ -18,6 +18,9 @@ import java.util.UUID;
  * individually or in bulk (e.g., on logout), converting the otherwise stateless
  * JWT flow into a controlled, revocable one.
  */
+/**
+ * JPA entity representing RefreshToken in the domain model.
+ */
 @Entity
 @Table(name = "refresh_tokens")
 @Data
@@ -56,3 +59,5 @@ public class RefreshToken extends PanacheEntityBase {
     @Column(name = "expires_at", nullable = false)
     public Instant expiresAt;
 }
+
+

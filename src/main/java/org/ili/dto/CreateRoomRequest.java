@@ -3,6 +3,9 @@ package org.ili.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+/**
+ * Data transfer object for CreateRoomRequest payloads.
+ */
 
 @Data
 @NoArgsConstructor
@@ -10,3 +13,5 @@ import lombok.NoArgsConstructor;
 public class CreateRoomRequest {
     private String name;
 }
+
+

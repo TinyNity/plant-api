@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+/**
+ * Data transfer object for SeededUserCredential payloads.
+ */
 
 @Data
 @NoArgsConstructor
@@ -14,3 +17,5 @@ public class SeededUserCredential {
     private String username;
     private String email;
 }
+
+

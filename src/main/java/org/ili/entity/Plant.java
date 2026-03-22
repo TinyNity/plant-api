@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.UUID;
+/**
+ * JPA entity representing Plant in the domain model.
+ */
 
 @Entity
 @Table(name = "plants")
@@ -51,3 +54,5 @@ public class Plant extends PanacheEntityBase {
     @JoinColumn(name = "room_id", nullable = false)
     public Room room;
 }
+
+

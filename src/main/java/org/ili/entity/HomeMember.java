@@ -9,6 +9,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+/**
+ * JPA entity representing HomeMember in the domain model.
+ */
 
 @Entity
 @Table(name = "home_members")
@@ -39,3 +42,5 @@ public class HomeMember extends PanacheEntityBase {
 
 
 }
+
+

@@ -8,6 +8,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.ili.entity.CareLog;
+/**
+ * Data transfer object for CareLogResponse payloads.
+ */
 
 @Data
 @NoArgsConstructor
@@ -19,3 +22,5 @@ public class CareLogResponse {
         private String note;
         private LocalDateTime date;
 }
+
+

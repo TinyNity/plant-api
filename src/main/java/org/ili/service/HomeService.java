@@ -25,6 +25,9 @@ import io.quarkus.security.ForbiddenException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+/**
+ * Service handling household lifecycle, memberships and room management.
+ */
 
 @ApplicationScoped
 public class HomeService {
@@ -44,6 +47,12 @@ public class HomeService {
 	@Inject
 	AuthService authService;
 
+	/**
+	 * Retrieves one home by its identifier.
+	 *
+	 * @param id home identifier.
+	 * @return home response including members and rooms.
+	 */
 	public HomeResponse getById(UUID id) {
 		Home ret = homeRepository.findByIdOptional(id).orElseThrow(() -> new NotFoundException(String.format(id.toString())));
         List<Room> rooms = roomRepository.findByHomeId(ret.id);
@@ -56,6 +65,11 @@ public class HomeService {
 			.build();
 	}
 
+	/**
+	 * Lists homes the current user belongs to.
+	 *
+	 * @return user homes.
+	 */
 	public List<HomeResponse> getMyHomes() {
 		User currentUser = authService.getCurrentUser();
 		List<HomeMember> homeMembers;
@@ -80,6 +94,12 @@ public class HomeService {
 				.collect(Collectors.toList());
 	}
 
+	/**
+	 * Creates a new home and automatically adds the creator as ADMIN.
+	 *
+	 * @param request home creation payload.
+	 * @return created home response.
+	 */
 	@Transactional
 	public HomeResponse createHome(CreateHomeRequest request) {
 
@@ -110,6 +130,11 @@ public class HomeService {
 				.build();
 	}
 
+	/**
+	 * Deletes a home when requested by an administrator.
+	 *
+	 * @param homeId home identifier.
+	 */
 	@Transactional
 	public void deleteHome(UUID homeId) {
 		Home home = homeRepository.findByIdOptional(homeId)
@@ -123,6 +148,12 @@ public class HomeService {
 		throw new ForbiddenException("Current user does not have enough permission");
 	}
 
+	/**
+	 * Adds an existing user as member of a home.
+	 *
+	 * @param homeId home identifier.
+	 * @param request payload containing member email and role.
+	 */
 	@Transactional
 	public void addMember(UUID homeId, AddMemberRequest request) {
 		Home home = homeRepository.findByIdOptional(homeId)
@@ -152,6 +183,12 @@ public class HomeService {
 		homeMemberRepository.persist(membership);
 	}
 
+	/**
+	 * Removes a member from a home according to role hierarchy.
+	 *
+	 * @param homeId home identifier.
+	 * @param userId user identifier to remove.
+	 */
 	@Transactional
 	public void removeMember(UUID homeId, UUID userId) {
 		HomeMemberId id = new HomeMemberId(homeId, userId);
@@ -168,6 +205,12 @@ public class HomeService {
 		homeMemberRepository.delete(membership);
 	}
 
+	/**
+	 * Lists members of a home.
+	 *
+	 * @param homeId home identifier.
+	 * @return member summaries.
+	 */
 	public List<HomeMemberResponse> getMembersByHomeId(UUID homeId) {
 		homeRepository.findByIdOptional(homeId)
 				.orElseThrow(() -> new NotFoundException("Home not found"));
@@ -181,6 +224,12 @@ public class HomeService {
 				.collect(Collectors.toList());
 	}
 
+	/**
+	 * Lists rooms for one home.
+	 *
+	 * @param homeId home identifier.
+	 * @return room summaries.
+	 */
 	public List<RoomResponse> getRoomsByHomeId(UUID homeId) {
 		return roomRepository.findByHomeId(homeId).stream()
 				.map(room -> RoomResponse.builder()
@@ -191,6 +240,13 @@ public class HomeService {
 				.collect(Collectors.toList());
 	}
 
+	/**
+	 * Creates a new room in a home.
+	 *
+	 * @param homeId home identifier.
+	 * @param request room creation payload.
+	 * @return created room.
+	 */
 	@Transactional
 	public RoomResponse createRoom(UUID homeId, CreateRoomRequest request) {
 		Home home = homeRepository.findByIdOptional(homeId)
@@ -214,6 +270,11 @@ public class HomeService {
 				.build();
 	}
 
+	/**
+	 * Deletes an existing room when the current user has enough rights.
+	 *
+	 * @param roomId room identifier.
+	 */
 	@Transactional
 	public void deleteRoom(UUID roomId) {
 		Room room = roomRepository.findByIdOptional(roomId)
@@ -235,3 +296,4 @@ public class HomeService {
 	}
 
 }
+

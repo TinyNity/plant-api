@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.UUID;
+/**
+ * JPA entity representing HomeMemberId in the domain model.
+ */
 
 @Embeddable
 @Data
@@ -19,3 +22,5 @@ public class HomeMemberId implements Serializable {
     private UUID homeId;
     private UUID userId;
 }
+
+

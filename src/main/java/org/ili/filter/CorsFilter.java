@@ -6,10 +6,20 @@ import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.ext.Provider;
 
 import java.io.IOException;
+/**
+ * Dynamic CORS filter reflecting request origin for allowed browser clients.
+ */
 
 @Provider
 public class CorsFilter implements ContainerResponseFilter {
 
+    /**
+     * Adds CORS headers on responses when an Origin header is present.
+     *
+     * @param requestContext inbound request context.
+     * @param responseContext outbound response context.
+     * @throws IOException when response header update fails.
+     */
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
         // On récupère l'origine de la requête
@@ -24,3 +34,4 @@ public class CorsFilter implements ContainerResponseFilter {
         }
     }
 }
+

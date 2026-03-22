@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.ili.entity.Room;
+/**
+ * Data transfer object for HomeResponse payloads.
+ */
 
 @Data
 @NoArgsConstructor
@@ -21,3 +24,5 @@ public class HomeResponse {
     private List<String> memberUsernames;
 	private List<Room> rooms;
 }
+
+

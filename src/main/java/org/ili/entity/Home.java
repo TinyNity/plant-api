@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+/**
+ * JPA entity representing Home in the domain model.
+ */
 
 @Entity
 @Table(name = "homes")
@@ -32,3 +35,5 @@ public class Home extends PanacheEntityBase {
     @Builder.Default
     public List<HomeMember> members = new ArrayList<>();
 }
+
+

@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+/**
+ * Data transfer object for RoomResponse payloads.
+ */
 
 @Data
 @NoArgsConstructor
@@ -16,3 +19,5 @@ public class RoomResponse {
     private String name;
     private UUID homeId;
 }
+
+

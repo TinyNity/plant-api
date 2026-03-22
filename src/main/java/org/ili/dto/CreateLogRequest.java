@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.ili.entity.CareLog;
+/**
+ * Data transfer object for CreateLogRequest payloads.
+ */
 
 @Data
 @NoArgsConstructor
@@ -12,3 +15,5 @@ public class CreateLogRequest {
     private CareLog.CareType type;
     private String note;
 }
+
+

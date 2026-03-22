@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+/**
+ * Data transfer object for RegisterRequest payloads.
+ */
 
 @Data
 @NoArgsConstructor
@@ -14,3 +17,5 @@ public class RegisterRequest {
     private String email;
     private String password;
 }
+
+

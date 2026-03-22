@@ -3,6 +3,9 @@ package org.ili.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Data transfer object for UpdatePasswordRequest payloads.
+ */
 public class UpdatePasswordRequest {
 
     @NotBlank(message = "Current password is required")

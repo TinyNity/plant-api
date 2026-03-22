@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+/**
+ * JPA entity representing CareLog in the domain model.
+ */
 
 @Entity
 @Table(name = "care_logs")
@@ -46,3 +49,5 @@ public class CareLog extends PanacheEntityBase {
         WATERING, FERTILIZING, PRUNING, MISTING, OTHER
     }
 }
+
+

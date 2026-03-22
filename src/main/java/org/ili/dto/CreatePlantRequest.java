@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.UUID;
+/**
+ * Data transfer object for CreatePlantRequest payloads.
+ */
 
 @Data
 @NoArgsConstructor
@@ -31,3 +34,5 @@ public class CreatePlantRequest {
         this.deceased = false;
     }
 }
+
+

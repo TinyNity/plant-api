@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 import org.ili.enumeration.Role;
+/**
+ * Data transfer object for HomeMemberResponse payloads.
+ */
 
 @Data
 @NoArgsConstructor
@@ -19,3 +22,5 @@ public class HomeMemberResponse {
     private String username;
     private Role role;
 }
+
+

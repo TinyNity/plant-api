@@ -6,6 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+/**
+ * Data transfer object for DevSeedResponse payloads.
+ */
 
 @Data
 @NoArgsConstructor
@@ -23,3 +26,5 @@ public class DevSeedResponse {
     private String defaultPassword;
     private List<SeededUserCredential> sampleUsers;
 }
+
+

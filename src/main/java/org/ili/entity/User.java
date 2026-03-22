@@ -9,6 +9,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+/**
+ * JPA entity representing User in the domain model.
+ */
 
 @Entity
 @Table(name = "users")
@@ -34,3 +37,5 @@ public class User extends PanacheEntityBase {
     public String password;
 
 }
+
+

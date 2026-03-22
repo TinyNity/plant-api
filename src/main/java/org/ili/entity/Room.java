@@ -9,6 +9,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+/**
+ * JPA entity representing Room in the domain model.
+ */
 
 @Entity
 @Table(name = "rooms")
@@ -31,3 +34,5 @@ public class Room extends PanacheEntityBase {
     @JoinColumn(name = "home_id", nullable = false)
     public Home home;
 }
+
+
