@@ -1,0 +1,136 @@
+version: "3"
+
+vars:
+  CLUSTER_NAME: plant-cluster
+  NAMESPACE: plant
+  DB_RELEASE: plant-db
+  DB_CHART: bitnami/postgresql
+  DB_HOST: plant-db-postgresql
+  DB_NAME: plante_db
+  DB_USER: my_user
+  DB_PASSWORD: my_super_password
+  APP_RELEASE: plant-api
+  APP_CHART_PATH: ./helm/plant-api
+  IMAGE_NAME: plant-api
+  IMAGE_TAG: latest
+  SERVICE_NAME: plant-api-plant-api
+  LOCAL_PORT: 8080
+  CONTAINER_PORT: 8080
+
+tasks:
+  create-kind:
+    desc: Create local kind cluster
+    cmds:
+      - kind create cluster --name {{.CLUSTER_NAME}}
+
+  delete-kind:
+    desc: Delete local kind cluster
+    cmds:
+      - kind delete cluster --name {{.CLUSTER_NAME}}
+
+  create-namespace:
+    desc: Create Kubernetes namespace if missing
+    cmds:
+      - kubectl get namespace {{.NAMESPACE}} || kubectl create namespace {{.NAMESPACE}}
+
+  add-bitnami-repo:
+    desc: Add Bitnami Helm repository
+    cmds:
+      - helm repo add bitnami https://charts.bitnami.com/bitnami || true
+      - helm repo update
+
+  install-db:
+    desc: Install PostgreSQL in the cluster with Helm
+    deps: [create-namespace, add-bitnami-repo]
+    cmds:
+      - >
+        helm upgrade --install {{.DB_RELEASE}} {{.DB_CHART}}
+        --namespace {{.NAMESPACE}}
+        --set auth.username={{.DB_USER}}
+        --set auth.password={{.DB_PASSWORD}}
+        --set auth.database={{.DB_NAME}}
+
+  uninstall-db:
+    desc: Uninstall PostgreSQL release
+    cmds:
+      - helm uninstall {{.DB_RELEASE}} --namespace {{.NAMESPACE}} || true
+
+  build-image-jvm:
+    desc: Build backend Docker image
+    cmds:
+      - ./mvnw clean package -DskipTests
+      - docker build -f src/main/docker/Dockerfile.jvm -t {{.IMAGE_NAME}}:{{.IMAGE_TAG}} .
+
+  load-image-kind:
+    desc: Load local Docker image into kind cluster
+    cmds:
+      - kind load docker-image {{.IMAGE_NAME}}:{{.IMAGE_TAG}} --name {{.CLUSTER_NAME}}
+
+  deploy:
+    desc: Deploy backend Helm chart
+    deps: [create-namespace]
+    cmds:
+      - >
+        helm upgrade --install {{.APP_RELEASE}} {{.APP_CHART_PATH}}
+        --namespace {{.NAMESPACE}}
+        --set image.repository={{.IMAGE_NAME}}
+        --set image.tag={{.IMAGE_TAG}}
+        --set image.pullPolicy=IfNotPresent
+        --set database.host={{.DB_HOST}}
+        --set database.port=5432
+        --set database.name={{.DB_NAME}}
+        --set database.username={{.DB_USER}}
+        --set database.password={{.DB_PASSWORD}}
+
+  undeploy:
+    desc: Uninstall backend Helm release
+    cmds:
+      - helm uninstall {{.APP_RELEASE}} --namespace {{.NAMESPACE}} || true
+
+  redeploy:
+    desc: Rebuild image, reload it into kind, and redeploy backend
+    deps: [build-image-jvm, load-image-kind]
+    cmds:
+      - task: deploy
+
+  pods:
+    desc: Show pods in namespace
+    cmds:
+      - kubectl get pods -n {{.NAMESPACE}}
+
+  services:
+    desc: Show services in namespace
+    cmds:
+      - kubectl get svc -n {{.NAMESPACE}}
+
+  logs:
+    desc: Show backend logs
+    cmds:
+      - kubectl logs -n {{.NAMESPACE}} deployment/{{.APP_RELEASE}}-plant-api --tail=200
+
+  port-forward:
+    desc: Forward backend service to localhost
+    cmds:
+      - kubectl port-forward -n {{.NAMESPACE}} svc/{{.SERVICE_NAME}} {{.LOCAL_PORT}}:{{.CONTAINER_PORT}}
+
+  status:
+    desc: Show pods and services
+    cmds:
+      - kubectl get pods -n {{.NAMESPACE}}
+      - kubectl get svc -n {{.NAMESPACE}}
+
+  reset:
+    desc: Remove backend and db releases
+    cmds:
+      - helm uninstall {{.APP_RELEASE}} --namespace {{.NAMESPACE}} || true
+      - helm uninstall {{.DB_RELEASE}} --namespace {{.NAMESPACE}} || true
+
+  bootstrap:
+    desc: Full local bootstrap for Kubernetes deployment
+    cmds:
+      - task: create-kind
+      - task: install-db
+      - task: build-image-jvm
+      - task: load-image-kind
+      - task: deploy
+      - task: status
