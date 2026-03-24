@@ -215,7 +215,7 @@ public class HomeService {
 		Role userPermission = authService.getUserPermission(homeId, userId);
 		Role currentUserPermission = authService.getUserPermission(homeId, authService.getCurrentUser().id);
 
-		if (currentUserPermission.compareTo(userPermission) <= 0 || currentUserPermission.compareTo(request.role) <= 0) {
+		if (currentUserPermission != Role.ADMIN || userPermission == Role.ADMIN) {
 			throw new ForbiddenException("Current user does not have enough permission");
 		}
 
