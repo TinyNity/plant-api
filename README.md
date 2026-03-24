@@ -1,101 +1,294 @@
-# projetplante
+# Plant API
 
-## Running with Docker Compose (Recommended)
+Backend API for the household plant management application, built with Quarkus.
 
-```sh
-docker compose up --build -d
+## Tech stack
+
+- Java 21
+- Quarkus
+- PostgreSQL
+- Flyway
+- Docker
+- Kubernetes (kind)
+- Helm
+- Task
+
+---
+
+## Local development
+
+### Run PostgreSQL with Docker Compose
+
+```bash
+docker compose up -d db
 ```
 
-The application will be accessible at <http://localhost:8080> and the database on port `5432`.
-To stop the application, run:
+### Run the backend in dev mode
 
-```sh
-docker compose down
-```
-
-## Testing the application
-
-```sh
-./mvnw clean test
-```
-
-
-## Running the application in dev mode
-
-You can run your application in dev mode that enables live coding using:
-
-```sh
+```bash
 ./mvnw quarkus:dev
 ```
 
-### Generating dev data with Faker
+The API will be available on:
 
-The legacy SQL mock data has been removed from Flyway. In `dev` profile only, you can now generate large fake datasets on demand with:
+- `http://localhost:8080`
 
-```sh
-curl -X POST http://localhost:8080/api/v1/dev/seed \
-  -H "Content-Type: application/json" \
-  -d '{
-    "replaceExisting": true,
-    "userCount": 12,
-    "homesPerUser": 2,
-    "additionalMembersPerHome": 2,
-    "roomsPerHome": 3,
-    "plantsPerRoom": 6,
-    "logsPerPlant": 4
-  }'
+OpenAPI documentation is available on:
+
+- `http://localhost:8080/q/openapi`
+
+---
+
+## Docker
+
+### Build the application
+
+```bash
+./mvnw clean package -DskipTests
 ```
 
-The response returns the number of generated records plus a small sample of user credentials. All generated users share the password configured by `%dev.plante.dev-seeder.default-user-password` in [src/main/resources/application.properties](src/main/resources/application.properties).
+### Build the Docker image
 
-## Packaging and running the application
-
-The application can be packaged using:
-
-```sh
-./mvnw package
+```bash
+docker build -f src/main/docker/Dockerfile.jvm -t plant-api:latest .
 ```
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an *uber-jar* as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+---
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+## Kubernetes local deployment
 
-If you want to build an *uber-jar*, execute the following command:
+This project can be deployed locally on a Kubernetes cluster using:
 
-```sh
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+- **kind** for the cluster
+- **Helm** for package management
+- **Bitnami PostgreSQL** for the database
+- **Taskfile** for automation
+
+### Prerequisites
+
+Make sure the following tools are installed:
+
+- Docker
+- kind
+- kubectl
+- Helm
+- Task
+
+You can verify them with:
+
+```bash
+kind --version
+kubectl version --client
+helm version
+task --version
+docker --version
 ```
 
-The application, packaged as an *uber-jar*, is now runnable using `java -jar target/*-runner.jar`.
+---
 
-## Creating a native executable
+## Deployment workflow
 
-You can create a native executable using:
+### 1. Create the kind cluster
 
-```sh
-./mvnw package -Dnative
+```bash
+task create-kind
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+### 2. Install PostgreSQL in Kubernetes
 
-```sh
-./mvnw package -Dnative -Dquarkus.native.container-build=true
+```bash
+task install-db
 ```
 
-You can then execute your native executable with: `./target/projetplante-1.0-SNAPSHOT-runner`
+### 3. Build the backend image
 
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
+```bash
+task build-image-jvm
+```
 
-## Related Guides
+### 4. Load the image into kind
 
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus
-  REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
+```bash
+task load-image-kind
+```
 
-## Provided Code
+### 5. Deploy the backend with Helm
 
-### REST
+```bash
+task deploy
+```
 
-Easily start your REST Web Services
+### 6. Check the deployment status
 
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+```bash
+task status
+```
+
+Or manually:
+
+```bash
+kubectl get pods -n plant
+kubectl get svc -n plant
+```
+
+### 7. Check backend logs
+
+```bash
+task logs
+```
+
+### 8. Access the API locally
+
+Start port-forwarding:
+
+```bash
+task port-forward
+```
+
+Then access the API at:
+
+- `http://localhost:8080`
+
+OpenAPI specification:
+
+- `http://localhost:8080/q/openapi`
+
+---
+
+## One-command bootstrap
+
+You can also run the full setup with:
+
+```bash
+task bootstrap
+```
+
+This will:
+
+- create the kind cluster
+- install PostgreSQL
+- build the backend image
+- load the image into kind
+- deploy the backend
+- show cluster status
+
+---
+
+## Available Task commands
+
+### Cluster management
+
+```bash
+task create-kind
+task delete-kind
+```
+
+### Namespace and database
+
+```bash
+task create-namespace
+task install-db
+task uninstall-db
+```
+
+### Image build and deployment
+
+```bash
+task build-image-jvm
+task load-image-kind
+task deploy
+task redeploy
+task undeploy
+```
+
+### Debugging
+
+```bash
+task pods
+task services
+task logs
+task port-forward
+task status
+```
+
+### Cleanup
+
+```bash
+task reset
+```
+
+---
+
+## Kubernetes resources
+
+### Namespace
+
+The deployment uses the namespace:
+
+- `plant`
+
+### PostgreSQL release
+
+The PostgreSQL Helm release name is:
+
+- `plant-db`
+
+The PostgreSQL service inside the cluster is:
+
+- `plant-db-postgresql`
+
+### Backend release
+
+The backend Helm release name is:
+
+- `plant-api`
+
+The backend service inside the cluster is:
+
+- `plant-api`
+
+---
+
+## Cleanup
+
+### Remove the backend and database releases
+
+```bash
+task reset
+```
+
+### Delete the kind cluster
+
+```bash
+task delete-kind
+```
+
+---
+
+## Notes
+
+- Production datasource configuration is injected through environment variables.
+- PostgreSQL credentials are passed through Helm values and Kubernetes resources.
+- Flyway migrations run automatically on backend startup.
+- The local Kubernetes setup is intended for development and demonstration purposes.
+
+---
+
+## Project structure
+
+Relevant files for the Kubernetes deployment:
+
+```text
+Taskfile.yaml
+helm/
+  plant-api/
+    Chart.yaml
+    values.yaml
+    templates/
+      _helpers.tpl
+      configmap.yaml
+      secret.yaml
+      service.yaml
+      deployment.yaml
+src/main/resources/application.properties
+```
