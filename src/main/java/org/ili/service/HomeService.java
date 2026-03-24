@@ -10,6 +10,7 @@ import org.ili.dto.CreateRoomRequest;
 import org.ili.dto.HomeMemberResponse;
 import org.ili.dto.HomeResponse;
 import org.ili.dto.RoomResponse;
+import org.ili.dto.UpdateMemberRequest;
 import org.ili.entity.Home;
 import org.ili.entity.HomeMember;
 import org.ili.entity.HomeMemberId;
@@ -203,6 +204,23 @@ public class HomeService {
 		}
 
 		homeMemberRepository.delete(membership);
+	}
+
+	@Transactional
+	public void updateMember(UUID homeId, UUID userId, UpdateMemberRequest request) {
+		HomeMemberId id = new HomeMemberId(homeId, userId);
+		HomeMember membership = homeMemberRepository.findByIdOptional(id)
+				.orElseThrow(() -> new NotFoundException("Membership not found"));
+
+		Role userPermission = authService.getUserPermission(homeId, userId);
+		Role currentUserPermission = authService.getUserPermission(homeId, authService.getCurrentUser().id);
+
+		if (currentUserPermission.compareTo(userPermission) <= 0 || currentUserPermission.compareTo(request.role) <= 0) {
+			throw new ForbiddenException("Current user does not have enough permission");
+		}
+
+		membership.setRole(request.role);
+		homeMemberRepository.persist(membership);
 	}
 
 	/**

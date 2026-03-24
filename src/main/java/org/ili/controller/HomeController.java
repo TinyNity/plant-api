@@ -115,6 +115,13 @@ public class HomeController {
         return Response.noContent().build();
     }
 
+    @PUT
+    @Path("/{id}/members/{userId}")
+    public Response updateMember(@PathParam("id") UUID homeId, @PathParam("userId") UUID userId, UpdateMemberRequest request) {
+        homeService.updateMember(homeId, userId, request);
+        return Response.ok().build();
+    }
+
     /**
      * Lists rooms belonging to one home.
      *
